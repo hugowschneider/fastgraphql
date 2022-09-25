@@ -1,6 +1,5 @@
 from datetime import date
 from typing import (
-    Generic,
     Iterable,
     List,
     Type,
@@ -104,7 +103,7 @@ class GraphQLTypeFactory:
                 return graphql_type
 
         field: ModelField
-        graphql_type = GraphQLType(name=name, as_input = self.input_factory)
+        graphql_type = GraphQLType(name=name, as_input=self.input_factory)
         for _, field in type_.__fields__.items():
             if field.name in exclude_model_attrs:
                 continue
@@ -139,7 +138,7 @@ class GraphQLTypeFactory:
             setattr(input_type, "__graphql__", SelfGraphQL())
         if i := SelfGraphQL.introspect(input_type):
             if self.input_factory:
-                i.as_input= graphql_type
+                i.as_input = graphql_type
             else:
                 i.as_type = graphql_type
 

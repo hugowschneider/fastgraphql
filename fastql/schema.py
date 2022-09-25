@@ -1,16 +1,15 @@
 import io
-import os
-from typing import List, Dict, Union, Iterable, TypeVar, Optional, Type, Any, cast
+from typing import Any, Dict, Iterable, List, Optional, Type, TypeVar, cast
 
 
 class GraphQLTypeEngine:
     def render(self) -> str:
-        raise NotImplemented  # pragma: no cover
+        raise NotImplementedError  # pragma: no cover
 
 
 class GraphQLDataType(GraphQLTypeEngine):
     def ref(self, nullable: bool = False) -> "GraphQLReference":
-        raise NotImplemented  # pragma: no cover
+        raise NotImplementedError  # pragma: no cover
 
 
 class GraphQLTypeAttribute:
@@ -32,7 +31,12 @@ class GraphQLReference(GraphQLDataType):
 
 
 class GraphQLType(GraphQLDataType):
-    def __init__(self, name: str, attrs: Optional[List[GraphQLTypeAttribute]] = None, as_input: bool = False):
+    def __init__(
+        self,
+        name: str,
+        attrs: Optional[List[GraphQLTypeAttribute]] = None,
+        as_input: bool = False,
+    ):
         self.name = name
         if not attrs:
             attrs = []
@@ -119,9 +123,9 @@ class GraphQLSchema(GraphQLTypeEngine):
         self.mutations: Dict[str, GraphQLType] = {}
 
     def _add_to_container(
-            self,
-            container: Dict[str, CT],
-            graphql_type: CT,
+        self,
+        container: Dict[str, CT],
+        graphql_type: CT,
     ) -> None:
         container[graphql_type.name] = graphql_type
 
