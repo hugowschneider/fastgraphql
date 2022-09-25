@@ -3,13 +3,13 @@ export SRC_PATH=./fastql
 export TEST_PATH=./tests
 
 test:
-	@pytest --cov=fastql --cov=tests --cov-report=term-missing:skip-covered --cov-report=xml:build/coverage.xml
+	@poetry run pytest --cov=fastql --cov=tests --cov-report=term-missing:skip-covered --cov-report=xml:build/coverage.xml
 
 lint:
-	@black --check $(SRC_PATH) $(TEST_PATH)
+	@poetry run black --check $(SRC_PATH) $(TEST_PATH)
 
 static-analysis:
-	@pyflakes $(SRC_PATH) $(TEST_PATH)
+	@poetry run pyflakes $(SRC_PATH) $(TEST_PATH)
 
 type-check:
-	@mypy $(SRC_PATH) $(TEST_PATH)
+	@poetry run mypy $(SRC_PATH) $(TEST_PATH)
