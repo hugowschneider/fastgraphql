@@ -8,5 +8,8 @@ test:
 lint:
 	@black --check $(SRC_PATH) $(TEST_PATH)
 
+static-analysis:
+	@pyflakes $(SRC_PATH) $(TEST_PATH)
+
 type-check:
 	@mypy $(SRC_PATH) $(TEST_PATH)

@@ -32,7 +32,11 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: poetry install
       - name: Lint
-        run: make link
+        run: make lint
+      - name: Type Checking
+        run: make type-check
+      - name: General Static Analysis
+        run: make static-analysis
       - name: Test
         run: make test
       - name: Upload coverage
