@@ -47,8 +47,9 @@ class GraphQLType(GraphQLDataType):
 
     def render(self) -> str:
         separator = "\n    "
+        decl = "input" if self.as_input else "type"
         return f"""
-type {self.name} {{
+{decl} {self.name} {{
     {separator.join([attr.render() for attr in self.attrs])}
 }}
         """.strip()
@@ -142,9 +143,16 @@ class GraphQLSchema(GraphQLTypeEngine):
                 sorted_types = sorted(types, key=lambda x: x.name)
                 string_writer.write(separator.join([s.render() for s in sorted_types]))
 
-            sort_and_write(self.scalars.values())
-            string_writer.write(separator)
-            sort_and_write(self.types.values())
+            if len(self.scalars):
+                sort_and_write(self.scalars.values())
+
+            if len(self.types):
+                string_writer.write(separator)
+                sort_and_write(self.types.values())
+
+            if len(self.input_types):
+                string_writer.write(separator)
+                sort_and_write(self.input_types.values())
 
             schema = string_writer.getvalue()
 
@@ -154,6 +162,7 @@ class GraphQLSchema(GraphQLTypeEngine):
 class SelfGraphQL:
     def __init__(self) -> None:
         self.as_type: Optional[GraphQLDataType] = None
+        self.as_input: Optional[GraphQLDataType] = None
 
     @staticmethod
     def introspect(type_: Type[Any]) -> Optional["SelfGraphQL"]:

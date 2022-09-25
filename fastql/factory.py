@@ -97,8 +97,11 @@ class GraphQLTypeFactory:
         if not name:
             name = self.render_name(type_)
 
-        if (i := SelfGraphQL.introspect(type_)) and (graphql_type := i.as_type):
-            return graphql_type
+        if i := SelfGraphQL.introspect(type_):
+            if self.input_factory and (graphql_type := i.as_input):
+                return graphql_type
+            elif graphql_type := i.as_type:
+                return graphql_type
 
         field: ModelField
         graphql_type = GraphQLType(name=name, as_input = self.input_factory)
@@ -123,8 +126,10 @@ class GraphQLTypeFactory:
             )
 
         self.add_graphql_metadata(type_, graphql_type)
-        self.schema.add_type(graphql_type=graphql_type)
-
+        if self.input_factory:
+            self.schema.add_input_type(graphql_type=graphql_type)
+        else:
+            self.schema.add_type(graphql_type=graphql_type)
         return graphql_type
 
     def add_graphql_metadata(
@@ -133,7 +138,10 @@ class GraphQLTypeFactory:
         if not hasattr(input_type, "__graphql__"):
             setattr(input_type, "__graphql__", SelfGraphQL())
         if i := SelfGraphQL.introspect(input_type):
-            i.as_type = graphql_type
+            if self.input_factory:
+                i.as_input= graphql_type
+            else:
+                i.as_type = graphql_type
 
     def render_name(self, type_: Type[T]) -> str:
         return str(type_.__name__)
