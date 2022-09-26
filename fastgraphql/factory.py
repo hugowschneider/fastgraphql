@@ -17,6 +17,7 @@ from typing import (
 from pydantic.fields import ModelField
 from pydantic import BaseModel
 
+from fastgraphql.exceptions import GraphQLResolverException
 from fastgraphql.schema import (
     GraphQLDataType,
     GraphQLArray,
@@ -176,8 +177,8 @@ class GraphQLFunctionFactory:
         func_signature = inspect.signature(func)
 
         if func_signature.return_annotation == inspect.Parameter.empty:
-            raise Exception(
-                f"Query {name} implemented in {func.__qualname__} does not have a return type annotation"
+            raise GraphQLResolverException(
+                f"{'Mutation' if self.mutation_factory else 'Query'} {name} implemented in {func.__qualname__} does not have a return type annotation"
             )
 
         graphql_type, nullable = self.type_factory.create_graphql_type(

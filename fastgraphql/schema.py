@@ -11,9 +11,7 @@ from typing import (
     overload,
 )
 
-
-class GraphQLSchemaException(Exception):
-    ...
+from fastgraphql.exceptions import GraphQLSchemaException
 
 
 class GraphQLTypeEngine:
@@ -175,7 +173,7 @@ class GraphQLSchema(GraphQLTypeEngine):
         self.queries: Dict[str, GraphQLFunction] = {}
         self.mutations: Dict[str, GraphQLFunction] = {}
 
-    def check_name_conflict(
+    def check_type_name_conflict(
         self, graphql_type: Union[GraphQLType, GraphQLScalar]
     ) -> None:
         if graphql_type.name in self.inputs:
@@ -193,16 +191,26 @@ class GraphQLSchema(GraphQLTypeEngine):
                 f"Name {graphql_type.name} is already used as an scalar. Please specify another name!"
             )
 
+    def check_function_name_conflict(self, graphql_type: GraphQLFunction) -> None:
+        if graphql_type.name in self.queries:
+            raise GraphQLSchemaException(
+                f"Name {graphql_type.name} is already used for a query. Please specify another name!"
+            )
+        if graphql_type.name in self.mutations:
+            raise GraphQLSchemaException(
+                f"Name {graphql_type.name} is already used for a mutation. Please specify another name!"
+            )
+
     def add_type(self, graphql_type: GraphQLType) -> None:
-        self.check_name_conflict(graphql_type=graphql_type)
+        self.check_type_name_conflict(graphql_type=graphql_type)
         self.types[graphql_type.name] = graphql_type
 
     def add_scalar(self, graphql_type: GraphQLScalar) -> None:
-        self.check_name_conflict(graphql_type=graphql_type)
+        self.check_type_name_conflict(graphql_type=graphql_type)
         self.scalars[graphql_type.name] = graphql_type
 
     def add_input_type(self, graphql_type: GraphQLType) -> None:
-        self.check_name_conflict(graphql_type=graphql_type)
+        self.check_type_name_conflict(graphql_type=graphql_type)
         self.inputs[graphql_type.name] = graphql_type
 
     def render(self) -> str:
@@ -222,9 +230,9 @@ class GraphQLSchema(GraphQLTypeEngine):
             sorted_types = sorted(functions, key=lambda x: x.name)
             queries_str = "\n\t".join([s.render() for s in sorted_types])
             return f"""
-type {decl} {
+type {decl} {{
     {queries_str}
-}""".strip()
+}}""".strip()
 
         s = separator.join(
             s
@@ -244,10 +252,12 @@ type {decl} {
         return s
 
     def add_query(self, graphql_query: GraphQLFunction) -> None:
+        self.check_function_name_conflict(graphql_query)
         self.queries[graphql_query.name] = graphql_query
 
-    def add_mutation(self, graphql_query: GraphQLFunction) -> None:
-        self.mutations[graphql_query.name] = graphql_query
+    def add_mutation(self, graphql_mutation: GraphQLFunction) -> None:
+        self.check_function_name_conflict(graphql_mutation)
+        self.mutations[graphql_mutation.name] = graphql_mutation
 
 
 class SelfGraphQL:

@@ -2,7 +2,8 @@ import pytest
 from pydantic import BaseModel, Field
 
 from fastgraphql import FastGraphQL
-from fastgraphql.schema import GraphQLSchemaException, GraphQLScalar
+from fastgraphql.schema import GraphQLScalar
+from fastgraphql.exceptions import GraphQLSchemaException
 
 
 class TestNameConflict:
