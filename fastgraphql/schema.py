@@ -213,13 +213,16 @@ class GraphQLSchema(GraphQLTypeEngine):
             sorted_types = sorted(types, key=lambda x: x.name)
             return separator.join([s.render() for s in sorted_types])
 
-        def sort_and_write_queries(queries: Iterable[GraphQLFunction]) -> str:
-            if not any(queries):
+        def sort_and_write_functions(
+            functions: Iterable[GraphQLFunction], as_mutation: bool
+        ) -> str:
+            if not any(functions):
                 return ""
-            sorted_types = sorted(queries, key=lambda x: x.name)
+            decl = "Mutation" if as_mutation else "Query"
+            sorted_types = sorted(functions, key=lambda x: x.name)
             queries_str = "\n\t".join([s.render() for s in sorted_types])
             return f"""
-type Query {
+type {decl} {
     {queries_str}
 }""".strip()
 
@@ -229,8 +232,11 @@ type Query {
                 sort_and_write(cast(Iterable[GT], self.scalars.values())),
                 sort_and_write(cast(Iterable[GT], self.types.values())),
                 sort_and_write(cast(Iterable[GT], self.inputs.values())),
-                sort_and_write_queries(
-                    cast(Iterable[GraphQLFunction], self.queries.values())
+                sort_and_write_functions(
+                    cast(Iterable[GraphQLFunction], self.queries.values()), False
+                ),
+                sort_and_write_functions(
+                    cast(Iterable[GraphQLFunction], self.mutations.values()), True
                 ),
             ]
             if len(s)
@@ -239,6 +245,9 @@ type Query {
 
     def add_query(self, graphql_query: GraphQLFunction) -> None:
         self.queries[graphql_query.name] = graphql_query
+
+    def add_mutation(self, graphql_query: GraphQLFunction) -> None:
+        self.mutations[graphql_query.name] = graphql_query
 
 
 class SelfGraphQL:

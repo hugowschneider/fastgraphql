@@ -98,12 +98,32 @@ class FastGraphQL:
         self,
         name: Optional[str] = None,
     ) -> Callable[..., Callable[..., Type[T_ANY]]]:
+        return self._graphql_function(name=name, as_mutation=False)
+
+    def graphql_mutation(
+        self,
+        name: Optional[str] = None,
+    ) -> Callable[..., Callable[..., Type[T_ANY]]]:
+        return self._graphql_function(name=name, as_mutation=True)
+
+    def _graphql_function(
+        self,
+        name: Optional[str],
+        as_mutation: bool,
+    ) -> Callable[..., Callable[..., Type[T_ANY]]]:
         def decorator(func: Callable[..., Type[T_ANY]]) -> Callable[..., Type[T_ANY]]:
             self.logger.info(
                 f"Constructing GraphQL {'input' if False else 'query'} for {func.__qualname__}"
             )
-            graphql_type = self.query_factory.create_query(func=func, name=name)
-            self.schema.add_query(graphql_type)
+            if as_mutation:
+                graphql_type = self.mutation_factory.create_function(
+                    func=func, name=name
+                )
+                self.schema.add_mutation(graphql_type)
+            else:
+                graphql_type = self.query_factory.create_function(func=func, name=name)
+                self.schema.add_query(graphql_type)
+
             if not isinstance(graphql_type, GraphQLFunction):  # pragma: no cover
                 raise Exception("Something went wrong")
 

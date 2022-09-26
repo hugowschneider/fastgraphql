@@ -168,7 +168,7 @@ class GraphQLFunctionFactory:
         self.input_factory = input_factory
         self.type_factory = type_factory
 
-    def create_query(
+    def create_function(
         self, func: Callable[..., T_ANY], name: Optional[str] = None
     ) -> GraphQLFunction:
         if not name:
