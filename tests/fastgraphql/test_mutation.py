@@ -16,15 +16,36 @@ class TestQueryRendering:
             return ""  # pragma: no cover
 
         expected_query_definition = """
-sample_mutation(): String!        
+sample_mutation(): String!""".strip()
+
+        expected_graphql_definition = f"""
+type Mutation {{
+    {expected_query_definition}
+}}""".strip()
+
+        self_graphql = SelfGraphQL.introspect(sample_mutation)
+        assert self_graphql
+        assert self_graphql.as_mutation
+        assert self_graphql.as_mutation.render() == expected_query_definition
+        assert fast_graphql.render() == expected_graphql_definition
+
+    def test_renamed_query(self) -> None:
+        fast_graphql = FastGraphQL()
+
+        @fast_graphql.graphql_mutation(name="q1")
+        def sample_query() -> str:
+            return ""  # pragma: no cover
+
+        expected_query_definition = """
+q1(): String!        
         """.strip()
 
         expected_graphql_definition = f"""
-type Mutation {
+type Mutation {{
     {expected_query_definition}
-}""".strip()
+}}""".strip()
 
-        self_graphql = SelfGraphQL.introspect(sample_mutation)
+        self_graphql = SelfGraphQL.introspect(sample_query)
         assert self_graphql
         assert self_graphql.as_mutation
         assert self_graphql.as_mutation.render() == expected_query_definition
@@ -53,9 +74,9 @@ sample_mutation(t_int: Int!, t_opt_int: Int, t_str: String!, t_opt_str: String, 
         """.strip()
 
         expected_graphql_definition = f"""
-type Mutation {
+type Mutation {{
     {expected_query_definition}
-}""".strip()
+}}""".strip()
 
         self_graphql = SelfGraphQL.introspect(sample_mutation)
         assert self_graphql
@@ -77,9 +98,9 @@ sample_mutation(x: Int!): String!
         """.strip()
 
         expected_graphql_definition = f"""
-type Mutation {
+type Mutation {{
     {expected_query_definition}
-}""".strip()
+}}""".strip()
 
         self_graphql = SelfGraphQL.introspect(sample_mutation)
         assert self_graphql
@@ -105,9 +126,9 @@ sample_mutation(x: CustomScalar!): String!
         expected_graphql_definition = f"""
 scalar CustomScalar
 
-type Mutation {
+type Mutation {{
     {expected_query_definition}
-}""".strip()
+}}""".strip()
 
         self_graphql = SelfGraphQL.introspect(sample_mutation)
         assert self_graphql
@@ -137,9 +158,9 @@ input Model {{
     t_int: Int!
 }}
 
-type Mutation {
+type Mutation {{
     {expected_query_definition}
-}""".strip()
+}}""".strip()
 
         self_graphql = SelfGraphQL.introspect(sample_mutation)
         assert self_graphql
@@ -166,9 +187,9 @@ type Model {{
     t_int: Int!
 }}
 
-type Mutation {
+type Mutation {{
     {expected_query_definition}
-}""".strip()
+}}""".strip()
 
         self_graphql = SelfGraphQL.introspect(sample_mutation)
         assert self_graphql
