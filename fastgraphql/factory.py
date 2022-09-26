@@ -1,3 +1,4 @@
+import inspect
 from datetime import date
 from typing import (
     Iterable,
@@ -10,6 +11,7 @@ from typing import (
     get_origin,
     get_args,
     cast,
+    Callable,
 )
 
 from pydantic.fields import ModelField
@@ -27,9 +29,14 @@ from fastgraphql.schema import (
     GraphQLTypeAttribute,
     GraphQLSchema,
     SelfGraphQL,
+    GraphQLFunction,
+    GraphQLFunctionParameter,
+    SelfGraphQLType,
+    SelfGraphQLFunction,
 )
 
 T = TypeVar("T", bound=BaseModel)
+T_ANY = TypeVar("T_ANY")
 
 
 class GraphQLTypeFactory:
@@ -93,7 +100,7 @@ class GraphQLTypeFactory:
             exclude_model_attrs = []
 
         if not name:
-            name = self.render_name(type_)
+            name = str(type_.__name__)
 
         if i := SelfGraphQL.introspect(type_):
             if self.input_factory and (graphql_type := i.as_input):
@@ -140,12 +147,72 @@ class GraphQLTypeFactory:
         self, input_type: Type[T], graphql_type: GraphQLType
     ) -> None:
         if not hasattr(input_type, "__graphql__"):
-            setattr(input_type, "__graphql__", SelfGraphQL())
+            setattr(input_type, "__graphql__", SelfGraphQLType())
         if i := SelfGraphQL.introspect(input_type):
             if self.input_factory:
                 i.as_input = graphql_type
             else:
                 i.as_type = graphql_type
 
-    def render_name(self, type_: Type[T]) -> str:
-        return str(type_.__name__)
+
+class GraphQLFunctionFactory:
+    def __init__(
+        self,
+        schema: GraphQLSchema,
+        type_factory: GraphQLTypeFactory,
+        input_factory: GraphQLTypeFactory,
+        mutation_factory: bool = False,
+    ) -> None:
+        self.schema = schema
+        self.mutation_factory = mutation_factory
+        self.input_factory = input_factory
+        self.type_factory = type_factory
+
+    def create_query(
+        self, func: Callable[..., T_ANY], name: Optional[str] = None
+    ) -> GraphQLFunction:
+        if not name:
+            name = str(func.__name__)
+        func_signature = inspect.signature(func)
+
+        if func_signature.return_annotation == inspect.Parameter.empty:
+            raise Exception(
+                f"Query {name} implemented in {func.__qualname__} does not have a return type annotation"
+            )
+
+        graphql_type, nullable = self.type_factory.create_graphql_type(
+            func_signature.return_annotation
+        )
+
+        graphql_query = GraphQLFunction(
+            name=name, return_type=graphql_type.ref(nullable)
+        )
+
+        for param_name, definition in func_signature.parameters.items():
+            if isinstance(definition.default, GraphQLFunctionParameter):
+                func_parameter: GraphQLFunctionParameter = definition.default
+                if definition.annotation == inspect.Parameter.empty:
+                    raise Exception(
+                        f"Method {func.__qualname__} defines a {GraphQLFunctionParameter.__name__} without type definition."
+                    )
+                graphql_type, nullable = self.input_factory.create_graphql_type(
+                    definition.annotation
+                )
+                func_parameter.set_type(graphql_type.ref())
+                func_parameter.set_name_if_none(param_name)
+                graphql_query.add_parameter(func_parameter)
+
+        self.add_graphql_metadata(func=func, graphql_function=graphql_query)
+
+        return graphql_query
+
+    def add_graphql_metadata(
+        self, func: Callable[..., T_ANY], graphql_function: GraphQLFunction
+    ) -> None:
+        if not hasattr(func, "__graphql__"):
+            setattr(func, "__graphql__", SelfGraphQLFunction())
+        if i := SelfGraphQL.introspect(func):
+            if self.mutation_factory:
+                i.as_mutation = graphql_function
+            else:
+                i.as_query = graphql_function
