@@ -126,22 +126,26 @@ class GraphQLID(GraphQLScalar):
         self._default_scalar = True
 
 
-class GraphQLFunctionParameter(GraphQLTypeEngine):
-    def __init__(self, name: Optional[str] = None):
+class GraphQLFunctionField(GraphQLTypeEngine):
+    def __init__(
+        self, name: Optional[str] = None, type_: Optional[GraphQLDataType] = None
+    ):
         self.name = name
-        self.type: Optional[GraphQLDataType] = None
+        self.type = type_
 
     def set_type(self, type_: GraphQLDataType) -> None:
-        if not self.type:
-            self.type = type_
+        self.type = type_
 
-    def set_name_if_none(self, name: str) -> None:
-        if not self.name:
-            self.name = name
+    def set_name(self, name: str) -> None:
+        self.name = name
 
     def render(self) -> str:
         assert self.type
         return f"{self.name}: {self.type.render()}"
+
+
+class GraphQLQueryField(GraphQLFunctionField):
+    ...
 
 
 class GraphQLFunction(GraphQLTypeEngine):
@@ -149,15 +153,13 @@ class GraphQLFunction(GraphQLTypeEngine):
         self,
         name: str,
         return_type: GraphQLDataType,
-        parameters: Optional[List[GraphQLFunctionParameter]] = None,
+        parameters: Optional[List[GraphQLFunctionField]] = None,
     ):
         self.name = name
         self.return_type = return_type
-        self.parameters: List[GraphQLFunctionParameter] = (
-            parameters if parameters else []
-        )
+        self.parameters: List[GraphQLFunctionField] = parameters if parameters else []
 
-    def add_parameter(self, func_parameter: GraphQLFunctionParameter) -> None:
+    def add_parameter(self, func_parameter: GraphQLFunctionField) -> None:
         self.parameters.append(func_parameter)
 
     def render(self) -> str:

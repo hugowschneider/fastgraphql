@@ -30,7 +30,7 @@ from fastgraphql.schema import (
     GraphQLSchema,
     SelfGraphQL,
     GraphQLFunction,
-    GraphQLFunctionParameter,
+    GraphQLFunctionField,
     SelfGraphQLType,
     SelfGraphQLFunction,
 )
@@ -189,17 +189,26 @@ class GraphQLFunctionFactory:
         )
 
         for param_name, definition in func_signature.parameters.items():
-            if isinstance(definition.default, GraphQLFunctionParameter):
-                func_parameter: GraphQLFunctionParameter = definition.default
+            if isinstance(definition.default, GraphQLFunctionField):
+                func_parameter: GraphQLFunctionField = definition.default
                 if definition.annotation == inspect.Parameter.empty:
                     raise Exception(
-                        f"Method {func.__qualname__} defines a {GraphQLFunctionParameter.__name__} without type definition."
+                        f"Method {func.__qualname__} defines a {GraphQLFunctionField.__name__} without type definition."
                     )
                 graphql_type, nullable = self.input_factory.create_graphql_type(
                     definition.annotation
                 )
-                func_parameter.set_type(graphql_type.ref())
-                func_parameter.set_name_if_none(param_name)
+                if func_parameter.type:
+                    if (
+                        isinstance(func_parameter.type, GraphQLScalar)
+                        and not func_parameter.type._default_scalar
+                    ):
+                        self.schema.add_scalar(func_parameter.type)
+                    graphql_type = func_parameter.type
+
+                func_parameter.set_type(graphql_type.ref(nullable=nullable))
+                if not func_parameter.name:
+                    func_parameter.set_name(param_name)
                 graphql_query.add_parameter(func_parameter)
 
         self.add_graphql_metadata(func=func, graphql_function=graphql_query)

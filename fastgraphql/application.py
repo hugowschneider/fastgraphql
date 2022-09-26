@@ -8,10 +8,17 @@ from typing import (
     Optional,
     Callable,
     List,
+    Any,
 )
 from pydantic import BaseModel
 
-from fastgraphql.schema import GraphQLSchema, GraphQLType, GraphQLFunction
+from fastgraphql.schema import (
+    GraphQLSchema,
+    GraphQLType,
+    GraphQLFunction,
+    GraphQLQueryField,
+    GraphQLScalar,
+)
 
 T = TypeVar("T", bound=BaseModel)
 T_ANY = TypeVar("T_ANY")
@@ -103,3 +110,8 @@ class FastGraphQL:
             return func
 
         return decorator
+
+    def graphql_query_field(
+        self, name: Optional[str] = None, graphql_scalar: Optional[GraphQLScalar] = None
+    ) -> Any:
+        return GraphQLQueryField(name=name, type_=graphql_scalar)
