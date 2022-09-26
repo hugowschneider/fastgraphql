@@ -7,6 +7,8 @@ from typing import (
     Type,
     cast,
     Union,
+    Callable,
+    overload,
 )
 
 
@@ -124,13 +126,54 @@ class GraphQLID(GraphQLScalar):
         self._default_scalar = True
 
 
+class GraphQLFunctionField(GraphQLTypeEngine):
+    def __init__(
+        self, name: Optional[str] = None, type_: Optional[GraphQLDataType] = None
+    ):
+        self.name = name
+        self.type = type_
+
+    def set_type(self, type_: GraphQLDataType) -> None:
+        self.type = type_
+
+    def set_name(self, name: str) -> None:
+        self.name = name
+
+    def render(self) -> str:
+        assert self.type
+        return f"{self.name}: {self.type.render()}"
+
+
+class GraphQLQueryField(GraphQLFunctionField):
+    ...
+
+
+class GraphQLFunction(GraphQLTypeEngine):
+    def __init__(
+        self,
+        name: str,
+        return_type: GraphQLDataType,
+        parameters: Optional[List[GraphQLFunctionField]] = None,
+    ):
+        self.name = name
+        self.return_type = return_type
+        self.parameters: List[GraphQLFunctionField] = parameters if parameters else []
+
+    def add_parameter(self, func_parameter: GraphQLFunctionField) -> None:
+        self.parameters.append(func_parameter)
+
+    def render(self) -> str:
+        parameters = ", ".join([p.render() for p in self.parameters])
+        return f"{self.name}({parameters}): {self.return_type.render()}"
+
+
 class GraphQLSchema(GraphQLTypeEngine):
     def __init__(self) -> None:
         self.types: Dict[str, GraphQLType] = {}
         self.scalars: Dict[str, GraphQLScalar] = {}
         self.inputs: Dict[str, GraphQLType] = {}
-        self.queries: Dict[str, GraphQLType] = {}
-        self.mutations: Dict[str, GraphQLType] = {}
+        self.queries: Dict[str, GraphQLFunction] = {}
+        self.mutations: Dict[str, GraphQLFunction] = {}
 
     def check_name_conflict(
         self, graphql_type: Union[GraphQLType, GraphQLScalar]
@@ -170,25 +213,61 @@ class GraphQLSchema(GraphQLTypeEngine):
             sorted_types = sorted(types, key=lambda x: x.name)
             return separator.join([s.render() for s in sorted_types])
 
+        def sort_and_write_queries(queries: Iterable[GraphQLFunction]) -> str:
+            if not any(queries):
+                return ""
+            sorted_types = sorted(queries, key=lambda x: x.name)
+            queries_str = "\n\t".join([s.render() for s in sorted_types])
+            return f"""
+type Query {
+    {queries_str}
+}""".strip()
+
         s = separator.join(
             s
             for s in [
                 sort_and_write(cast(Iterable[GT], self.scalars.values())),
                 sort_and_write(cast(Iterable[GT], self.types.values())),
                 sort_and_write(cast(Iterable[GT], self.inputs.values())),
+                sort_and_write_queries(
+                    cast(Iterable[GraphQLFunction], self.queries.values())
+                ),
             ]
             if len(s)
         )
         return s
 
+    def add_query(self, graphql_query: GraphQLFunction) -> None:
+        self.queries[graphql_query.name] = graphql_query
+
 
 class SelfGraphQL:
+    @staticmethod
+    @overload
+    def introspect(type_: Type[Any]) -> Optional["SelfGraphQLType"]:
+        ...
+
+    @staticmethod
+    @overload
+    def introspect(type_: Callable[..., Any]) -> Optional["SelfGraphQLFunction"]:
+        ...
+
+    @staticmethod
+    def introspect(
+        type_: Union[Type[Any], Callable[..., Any]]
+    ) -> Union["SelfGraphQL", None]:
+        if hasattr(type_, "__graphql__"):
+            return cast(SelfGraphQL, getattr(type_, "__graphql__"))
+        return None
+
+
+class SelfGraphQLType(SelfGraphQL):
     def __init__(self) -> None:
         self.as_type: Optional[GraphQLType] = None
         self.as_input: Optional[GraphQLType] = None
 
-    @staticmethod
-    def introspect(type_: Type[Any]) -> Optional["SelfGraphQL"]:
-        if hasattr(type_, "__graphql__"):
-            return cast(SelfGraphQL, getattr(type_, "__graphql__"))
-        return None
+
+class SelfGraphQLFunction(SelfGraphQL):
+    def __init__(self) -> None:
+        self.as_query: Optional[GraphQLFunction] = None
+        self.as_mutation: Optional[GraphQLFunction] = None

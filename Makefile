@@ -13,3 +13,5 @@ static-analysis:
 
 type-check:
 	@poetry run mypy $(SRC_PATH) $(TEST_PATH)
+
+all: lint static-analysis type-check test
