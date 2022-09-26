@@ -1,5 +1,5 @@
 
-export SRC_PATH=./fastql
+export SRC_PATH=./fastgraphql
 export TEST_PATH=./tests
 
 test:

@@ -48,7 +48,9 @@ type TypeWithoutReferences {
 
         assert self_graphql.as_type.render() == expected_graphql_def
 
-        assert fast_graphql.render() == expected_scalar_def + "\n\n" + expected_graphql_def
+        assert (
+            fast_graphql.render() == expected_scalar_def + "\n\n" + expected_graphql_def
+        )
 
     def test_simple_type_with_name(self) -> None:
         fast_graphql = FastGraphQL()
@@ -87,7 +89,9 @@ type Type1 {
 
         assert self_graphql.as_type.render() == expected_graphql_def
 
-        assert fast_graphql.render() == expected_scalar_def + "\n\n" + expected_graphql_def
+        assert (
+            fast_graphql.render() == expected_scalar_def + "\n\n" + expected_graphql_def
+        )
 
     def test_nested_type(self) -> None:
         fast_graphql = FastGraphQL()
@@ -124,12 +128,12 @@ type TypeWithReference {
         assert self_graphql
         assert self_graphql.as_type
         assert (
-                fast_graphql.render()
-                == expected_scalar_def
-                + "\n\n"
-                + expected_graphql_def
-                + "\n\n"
-                + self_graphql.as_type.render()
+            fast_graphql.render()
+            == expected_scalar_def
+            + "\n\n"
+            + expected_graphql_def
+            + "\n\n"
+            + self_graphql.as_type.render()
         )
 
     def test_nested_type_with_name(self) -> None:
@@ -167,12 +171,12 @@ type Type2 {
         assert self_graphql
         assert self_graphql.as_type
         assert (
-                fast_graphql.render()
-                == expected_scalar_def
-                + "\n\n"
-                + self_graphql.as_type.render()
-                + "\n\n"
-                + expected_graphql_def
+            fast_graphql.render()
+            == expected_scalar_def
+            + "\n\n"
+            + self_graphql.as_type.render()
+            + "\n\n"
+            + expected_graphql_def
         )
 
     def test_simple_type_exclude_attr(self) -> None:
@@ -209,7 +213,9 @@ type TypeWithoutReferences {
 
         assert self_graphql.as_type.render() == expected_graphql_def
 
-        assert fast_graphql.render() == expected_scalar_def + "\n\n" + expected_graphql_def
+        assert (
+            fast_graphql.render() == expected_scalar_def + "\n\n" + expected_graphql_def
+        )
 
     def test_model_with_generic_types(self) -> None:
         fast_graphql = FastGraphQL()
@@ -310,4 +316,6 @@ type ModelWithId {
         assert self_graphql.as_type
         assert self_graphql.as_type.render() == expected_graphql_def
 
-        assert fast_graphql.render() == expected_scalar_def + "\n\n" + expected_graphql_def
+        assert (
+            fast_graphql.render() == expected_scalar_def + "\n\n" + expected_graphql_def
+        )

@@ -137,7 +137,7 @@ class GraphQLTypeFactory:
         return graphql_type
 
     def add_graphql_metadata(
-        self, input_type: Type[T], graphql_type: GraphQLDataType
+        self, input_type: Type[T], graphql_type: GraphQLType
     ) -> None:
         if not hasattr(input_type, "__graphql__"):
             setattr(input_type, "__graphql__", SelfGraphQL())
