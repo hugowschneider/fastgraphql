@@ -15,7 +15,7 @@ from typing import (
 from pydantic.fields import ModelField
 from pydantic import BaseModel
 
-from fastql.schema import (
+from fastgraphql.schema import (
     GraphQLDataType,
     GraphQLArray,
     GraphQLString,
@@ -76,7 +76,6 @@ class GraphQLTypeFactory:
             return GraphQLFloat(), False
         if issubclass(type_, date):
             scalar = GraphQLScalar("Date")
-            self.schema.add_scalar(scalar)
             return scalar, False
 
         raise RuntimeError(  # pragma: no cover
@@ -99,7 +98,7 @@ class GraphQLTypeFactory:
         if i := SelfGraphQL.introspect(type_):
             if self.input_factory and (graphql_type := i.as_input):
                 return graphql_type
-            elif graphql_type := i.as_type:
+            elif not self.input_factory and (graphql_type := i.as_type):
                 return graphql_type
 
         field: ModelField
@@ -114,6 +113,12 @@ class GraphQLTypeFactory:
                 )
             else:
                 graphql_attr_type, nullable = self.create_graphql_type(field.annotation)
+
+            if (
+                isinstance(graphql_attr_type, GraphQLScalar)
+                and not graphql_attr_type._default_scalar
+            ):
+                self.schema.add_scalar(graphql_attr_type)
 
             graphql_type.add_attribute(
                 GraphQLTypeAttribute(

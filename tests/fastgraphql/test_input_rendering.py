@@ -3,15 +3,15 @@ from typing import Optional, List
 
 from pydantic import BaseModel, Field
 
-from fastql.application import FastQL
-from fastql.schema import GraphQLID, SelfGraphQL
+from fastgraphql import FastGraphQL
+from fastgraphql.schema import GraphQLID, SelfGraphQL
 
 
-class TestPydanticTypeRendering:
+class TestPydanticInputRendering:
     def test_simple_type(self) -> None:
-        fastql = FastQL()
+        fast_graphql = FastGraphQL()
 
-        @fastql.graphql_input()
+        @fast_graphql.graphql_input()
         class TypeWithoutReferences(BaseModel):
             t_int: int
             t_opt_int: Optional[int]
@@ -48,12 +48,14 @@ input TypeWithoutReferences {
 
         assert self_graphql.as_input.render() == expected_graphql_def
 
-        assert fastql.render() == expected_scalar_def + "\n\n" + expected_graphql_def
+        print(fast_graphql.render())
+
+        assert fast_graphql.render() == expected_scalar_def + "\n\n" + expected_graphql_def
 
     def test_simple_type_with_name(self) -> None:
-        fastql = FastQL()
+        fast_graphql = FastGraphQL()
 
-        @fastql.graphql_input(name="Type1")
+        @fast_graphql.graphql_input(name="Type1")
         class TypeWithoutReferences(BaseModel):
             t_int: int
             t_opt_int: Optional[int]
@@ -87,19 +89,19 @@ input Type1 {
 
         assert self_graphql.as_input.render() == expected_graphql_def
 
-        assert fastql.render() == expected_scalar_def + "\n\n" + expected_graphql_def
+        assert fast_graphql.render() == expected_scalar_def + "\n\n" + expected_graphql_def
 
     def test_nested_type(self) -> None:
-        fastql = FastQL()
+        fast_graphql = FastGraphQL()
 
-        @fastql.graphql_input()
+        @fast_graphql.graphql_input()
         class TypeWithoutReferences(BaseModel):
             t_int: int
             t_str: str
             t_float: float
             t_datatime: datetime
 
-        @fastql.graphql_input()
+        @fast_graphql.graphql_input()
         class TypeWithReference(BaseModel):
             t_int: int
             t_type_with_references: TypeWithoutReferences
@@ -124,7 +126,7 @@ input TypeWithReference {
         assert self_graphql
         assert self_graphql.as_input
         assert (
-            fastql.render()
+            fast_graphql.render()
             == expected_scalar_def
             + "\n\n"
             + expected_graphql_def
@@ -133,16 +135,16 @@ input TypeWithReference {
         )
 
     def test_nested_type_with_name(self) -> None:
-        fastql = FastQL()
+        fast_graphql = FastGraphQL()
 
-        @fastql.graphql_input(name="Type1")
+        @fast_graphql.graphql_input(name="Type1")
         class TypeWithoutReferences(BaseModel):
             t_int: int
             t_str: str
             t_float: float
             t_datatime: datetime
 
-        @fastql.graphql_input(name="Type2")
+        @fast_graphql.graphql_input(name="Type2")
         class TypeWithReference(BaseModel):
             t_int: int
             t_type_with_references: TypeWithoutReferences
@@ -167,7 +169,7 @@ input Type2 {
         assert self_graphql
         assert self_graphql.as_input
         assert (
-            fastql.render()
+            fast_graphql.render()
             == expected_scalar_def
             + "\n\n"
             + self_graphql.as_input.render()
@@ -176,9 +178,9 @@ input Type2 {
         )
 
     def test_simple_type_exclude_attr(self) -> None:
-        fastql = FastQL()
+        fast_graphql = FastGraphQL()
 
-        @fastql.graphql_input(exclude_model_attrs=["t_int", "t_str"])
+        @fast_graphql.graphql_input(exclude_model_attrs=["t_int", "t_str"])
         class TypeWithoutReferences(BaseModel):
             t_int: int
             t_opt_int: Optional[int]
@@ -209,12 +211,12 @@ input TypeWithoutReferences {
 
         assert self_graphql.as_input.render() == expected_graphql_def
 
-        assert fastql.render() == expected_scalar_def + "\n\n" + expected_graphql_def
+        assert fast_graphql.render() == expected_scalar_def + "\n\n" + expected_graphql_def
 
     def test_model_with_generic_types(self) -> None:
-        fastql = FastQL()
+        fast_graphql = FastGraphQL()
 
-        @fastql.graphql_input()
+        @fast_graphql.graphql_input()
         class ModelWithGenericTypes(BaseModel):
             t_ints: List[int]
             t_str: List[str]
@@ -252,9 +254,9 @@ input ModelWithGenericTypes {
         assert self_graphql.as_input.render() == expected_graphql_def
 
     def test_graphql_id(self) -> None:
-        fastql = FastQL()
+        fast_graphql = FastGraphQL()
 
-        @fastql.graphql_input()
+        @fast_graphql.graphql_input()
         class ModelWithId(BaseModel):
             t_id: str = Field(..., graphql_scalar=GraphQLID())
 
@@ -268,12 +270,12 @@ input ModelWithId {
         assert self_graphql.as_input.render() == expected_graphql_def
 
     def test_inherited_types(self) -> None:
-        fastql = FastQL()
+        fast_graphql = FastGraphQL()
 
         class ParentModel(BaseModel):
             t_id: int
 
-        @fastql.graphql_input()
+        @fast_graphql.graphql_input()
         class ChildModel(ParentModel):
             t_str: str
 

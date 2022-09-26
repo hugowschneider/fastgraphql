@@ -1,0 +1,1 @@
+from fastgraphql.application import FastGraphQL

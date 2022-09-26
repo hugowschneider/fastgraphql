@@ -1,6 +1,6 @@
 import logging
 
-from fastql.factory import GraphQLTypeFactory
+from fastgraphql.factory import GraphQLTypeFactory
 
 from typing import (
     Type,
@@ -11,12 +11,12 @@ from typing import (
 )
 from pydantic import BaseModel
 
-from fastql.schema import GraphQLSchema, GraphQLType
+from fastgraphql.schema import GraphQLSchema, GraphQLType
 
 T = TypeVar("T", bound=BaseModel)
 
 
-class FastQL:
+class FastGraphQL:
     def __init__(self) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.schema = GraphQLSchema()
@@ -24,7 +24,7 @@ class FastQL:
     def render(self) -> str:
         return self.schema.render()
 
-    def graphql_model(
+    def _graphql_model(
         self,
         exclude_model_attrs: Optional[List[str]],
         name: Optional[str],
@@ -55,7 +55,7 @@ class FastQL:
         exclude_model_attrs: Optional[List[str]] = None,
         name: Optional[str] = None,
     ) -> Callable[..., Type[T]]:
-        return self.graphql_model(
+        return self._graphql_model(
             exclude_model_attrs=exclude_model_attrs, name=name, as_input=False
         )
 
@@ -64,6 +64,6 @@ class FastQL:
         exclude_model_attrs: Optional[List[str]] = None,
         name: Optional[str] = None,
     ) -> Callable[..., Type[T]]:
-        return self.graphql_model(
+        return self._graphql_model(
             exclude_model_attrs=exclude_model_attrs, name=name, as_input=True
         )

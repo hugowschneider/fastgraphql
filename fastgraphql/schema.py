@@ -1,5 +1,10 @@
 import io
-from typing import Any, Dict, Iterable, List, Optional, Type, TypeVar, cast
+from typing import Any, Dict, Iterable, List, Optional, Type, TypeVar, cast, Union
+
+
+class GraphQLSchemaException(BaseException):
+    def __init__(self, *args):
+        super().__init__(*args)
 
 
 class GraphQLTypeEngine:
@@ -118,7 +123,7 @@ class GraphQLSchema(GraphQLTypeEngine):
     def __init__(self) -> None:
         self.types: Dict[str, GraphQLType] = {}
         self.scalars: Dict[str, GraphQLScalar] = {}
-        self.input_types: Dict[str, GraphQLType] = {}
+        self.inputs: Dict[str, GraphQLType] = {}
         self.queries: Dict[str, GraphQLType] = {}
         self.mutations: Dict[str, GraphQLType] = {}
 
@@ -127,7 +132,24 @@ class GraphQLSchema(GraphQLTypeEngine):
         container: Dict[str, CT],
         graphql_type: CT,
     ) -> None:
+        self.check_name_conflict(graphql_type=graphql_type)
         container[graphql_type.name] = graphql_type
+
+    def check_name_conflict(
+        self, graphql_type: Union[GraphQLType, GraphQLScalar]
+    ) -> None:
+        if graphql_type.name in self.inputs:
+            raise GraphQLSchemaException(
+                f"Name {graphql_type.name} is already used as an input. Please specify another name!"
+            )
+        if graphql_type.name in self.types:
+            raise GraphQLSchemaException(
+                f"Name {graphql_type.name} is already used as an type. Please specify another name!"
+            )
+        if graphql_type.name in self.scalars and not isinstance(graphql_type, GraphQLScalar):
+            raise GraphQLSchemaException(
+                f"Name {graphql_type.name} is already used as an scalar. Please specify another name!"
+            )
 
     def add_type(self, graphql_type: GraphQLType) -> None:
         self._add_to_container(container=self.types, graphql_type=graphql_type)
@@ -136,37 +158,26 @@ class GraphQLSchema(GraphQLTypeEngine):
         self._add_to_container(container=self.scalars, graphql_type=graphql_type)
 
     def add_input_type(self, graphql_type: GraphQLType) -> None:
-        self._add_to_container(container=self.input_types, graphql_type=graphql_type)
+        self._add_to_container(container=self.inputs, graphql_type=graphql_type)
 
     def render(self) -> str:
         GT = TypeVar("GT", GraphQLScalar, GraphQLType)
-        with io.StringIO() as string_writer:
-            separator = "\n\n"
+        separator = "\n\n"
 
-            def sort_and_write(types: Iterable[GT]) -> None:
-                sorted_types = sorted(types, key=lambda x: x.name)
-                string_writer.write(separator.join([s.render() for s in sorted_types]))
-
-            if len(self.scalars):
-                sort_and_write(self.scalars.values())
-
-            if len(self.types):
-                string_writer.write(separator)
-                sort_and_write(self.types.values())
-
-            if len(self.input_types):
-                string_writer.write(separator)
-                sort_and_write(self.input_types.values())
-
-            schema = string_writer.getvalue()
-
-        return schema
+        def sort_and_write(types: Iterable[GT]) -> str:
+            sorted_types = sorted(types, key=lambda x: x.name)
+            return separator.join([s.render() for s in sorted_types])
+        s = separator.join(
+            sort_and_write(container.values())
+            for container in [self.scalars, self.types, self.inputs] if len(container)
+        )
+        return s
 
 
 class SelfGraphQL:
     def __init__(self) -> None:
-        self.as_type: Optional[GraphQLDataType] = None
-        self.as_input: Optional[GraphQLDataType] = None
+        self.as_type: Optional[GraphQLType] = None
+        self.as_input: Optional[GraphQLType] = None
 
     @staticmethod
     def introspect(type_: Type[Any]) -> Optional["SelfGraphQL"]:
