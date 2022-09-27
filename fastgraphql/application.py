@@ -1,3 +1,4 @@
+import functools
 import logging
 
 from fastgraphql.factory import GraphQLTypeFactory, GraphQLFunctionFactory
@@ -9,6 +10,8 @@ from typing import (
     Callable,
     List,
     Any,
+    Tuple,
+    Dict,
 )
 from pydantic import BaseModel
 
@@ -97,21 +100,21 @@ class FastGraphQL:
     def graphql_query(
         self,
         name: Optional[str] = None,
-    ) -> Callable[..., Callable[..., Type[T_ANY]]]:
+    ) -> Callable[..., Callable[..., T_ANY]]:
         return self._graphql_function(name=name, as_mutation=False)
 
     def graphql_mutation(
         self,
         name: Optional[str] = None,
-    ) -> Callable[..., Callable[..., Type[T_ANY]]]:
+    ) -> Callable[..., Callable[..., T_ANY]]:
         return self._graphql_function(name=name, as_mutation=True)
 
     def _graphql_function(
         self,
         name: Optional[str],
         as_mutation: bool,
-    ) -> Callable[..., Callable[..., Type[T_ANY]]]:
-        def decorator(func: Callable[..., Type[T_ANY]]) -> Callable[..., Type[T_ANY]]:
+    ) -> Callable[..., Callable[..., T_ANY]]:
+        def decorator(func: Callable[..., T_ANY]) -> Callable[..., T_ANY]:
             self.logger.info(
                 f"Constructing GraphQL {'input' if False else 'query'} for {func.__qualname__}"
             )
@@ -127,7 +130,14 @@ class FastGraphQL:
             if not isinstance(graphql_type, GraphQLFunction):  # pragma: no cover
                 raise Exception("Something went wrong")
 
-            return func
+            @functools.wraps(func)
+            def _decorator(*args: Tuple[Any], **kwargs: Dict[str, Any]) -> T_ANY:
+                resolved_kwargs: Dict[str, Any] = {}
+                return func(**resolved_kwargs)
+
+            graphql_type.resolver = _decorator
+
+            return _decorator
 
         return decorator
 

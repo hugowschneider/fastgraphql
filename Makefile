@@ -14,4 +14,7 @@ static-analysis:
 type-check:
 	@poetry run mypy $(SRC_PATH) $(TEST_PATH)
 
+clean-imports:
+	@autoflake --recursive --in-place --remove-all-unused-imports $(SRC_PATH) $(TEST_PATH) && black .
+
 all: lint static-analysis type-check test

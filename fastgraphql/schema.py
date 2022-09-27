@@ -9,9 +9,12 @@ from typing import (
     Union,
     Callable,
     overload,
+    TypeVar,
 )
 
 from fastgraphql.exceptions import GraphQLSchemaException
+
+T_ANY = TypeVar("T_ANY")
 
 
 class GraphQLTypeEngine:
@@ -124,11 +127,22 @@ class GraphQLID(GraphQLScalar):
         self._default_scalar = True
 
 
-class GraphQLFunctionField(GraphQLTypeEngine):
-    def __init__(
-        self, name: Optional[str] = None, type_: Optional[GraphQLDataType] = None
-    ):
+class InjectedFunctionParameter:
+    def __init__(self, name: Optional[str] = None):
+        self.resolver = None
         self.name = name
+
+    def construct_value(self, input: Any) -> Any:
+        if _ := self.resolver:
+            return input
+        return input
+
+
+class GraphQLFunctionField(GraphQLTypeEngine, InjectedFunctionParameter):
+    def __init__(
+        self, type_: Optional[GraphQLDataType] = None, name: Optional[str] = None
+    ):
+        super().__init__(name=name)
         self.type = type_
 
     def set_type(self, type_: GraphQLDataType) -> None:
@@ -156,13 +170,20 @@ class GraphQLFunction(GraphQLTypeEngine):
         self.name = name
         self.return_type = return_type
         self.parameters: List[GraphQLFunctionField] = parameters if parameters else []
+        self.resolver: Optional[Callable[..., T_ANY]] = None
+        self.injected_parameters: List[InjectedFunctionParameter] = []
 
-    def add_parameter(self, func_parameter: GraphQLFunctionField) -> None:
-        self.parameters.append(func_parameter)
+    def add_parameter(self, parameter: GraphQLFunctionField) -> None:
+        self.parameters.append(parameter)
+
+    def add_injected_parameter(self, parameter: InjectedFunctionParameter) -> None:
+        self.injected_parameters.append(parameter)
 
     def render(self) -> str:
         parameters = ", ".join([p.render() for p in self.parameters])
-        return f"{self.name}({parameters}): {self.return_type.render()}"
+        if parameters:
+            parameters = f"({parameters})"
+        return f"{self.name}{parameters}: {self.return_type.render()}"
 
 
 class GraphQLSchema(GraphQLTypeEngine):

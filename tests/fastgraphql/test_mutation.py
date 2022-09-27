@@ -16,7 +16,7 @@ class TestQueryRendering:
             return ""  # pragma: no cover
 
         expected_query_definition = """
-sample_mutation(): String!""".strip()
+sample_mutation: String!""".strip()
 
         expected_graphql_definition = f"""
 type Mutation {{
@@ -37,7 +37,7 @@ type Mutation {{
             return ""  # pragma: no cover
 
         expected_query_definition = """
-q1(): String!        
+q1: String!        
         """.strip()
 
         expected_graphql_definition = f"""
@@ -179,7 +179,7 @@ type Mutation {{
             return Model()  # pragma: no cover
 
         expected_query_definition = """
-sample_mutation(): Model!        
+sample_mutation: Model!        
         """.strip()
 
         expected_graphql_definition = f"""
