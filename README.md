@@ -1,4 +1,4 @@
-from pydantic import BaseModel# FastGraphQL
+# FastGraphQL
 FastGraphQL is intended to help developer create code driven GraphQL APIs.
 
 [![codecov](https://codecov.io/gh/hugowschneider/fastgraphql/branch/main/graph/badge.svg?token=FCC5LMA0IQ)](https://codecov.io/gh/hugowschneider/fastgraphql)
