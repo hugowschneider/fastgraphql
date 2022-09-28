@@ -1,7 +1,7 @@
 import functools
 import logging
 
-from fastgraphql.factory import GraphQLTypeFactory, GraphQLFunctionFactory
+from fastgraphql.factory import GraphQLTypeFactory, GraphQLFunctionFactory, _DateFormats
 
 from typing import (
     Type,
@@ -30,9 +30,21 @@ T_ANY = TypeVar("T_ANY")
 class FastGraphQL:
     def __init__(self) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
+
+        time_format = "%H:%M:%S"
+        date_format = "%Y-%m-%d"
+        self._date_formats = _DateFormats(
+            date_format=date_format,
+            time_format=time_format,
+            date_time_format=f"{date_format}T{time_format}%z",
+        )
         self.schema = GraphQLSchema()
-        self.type_factory = GraphQLTypeFactory(schema=self.schema, input_factory=False)
-        self.input_factory = GraphQLTypeFactory(schema=self.schema, input_factory=True)
+        self.type_factory = GraphQLTypeFactory(
+            schema=self.schema, input_factory=False, date_formats=self._date_formats
+        )
+        self.input_factory = GraphQLTypeFactory(
+            schema=self.schema, input_factory=True, date_formats=self._date_formats
+        )
         self.query_factory = GraphQLFunctionFactory(
             schema=self.schema,
             mutation_factory=False,
@@ -46,9 +58,23 @@ class FastGraphQL:
             type_factory=self.type_factory,
         )
 
-        self.time_format = "%H:%M:%S%z"
-        self.date_format = "%Y-%m-%d"
-        self.date_time_format = f"{self.date_format}T{self.time_format}"
+    def get_date_format(self) -> str:
+        return self._date_formats.date_format
+
+    def get_time_format(self) -> str:
+        return self._date_formats.time_format
+
+    def get_date_time_format(self) -> str:
+        return self._date_formats.date_time_format
+
+    def set_date_format(self, date_format: str) -> None:
+        self._date_formats.date_format = date_format
+
+    def set_time_format(self, time_format: str) -> None:
+        self._date_formats.time_format = time_format
+
+    def set_date_time_format(self, date_time_format: str) -> None:
+        self._date_formats.date_time_format = date_time_format
 
     def render(self) -> str:
         return self.schema.render()
@@ -62,9 +88,9 @@ class FastGraphQL:
         if exclude_model_attrs is None:
             exclude_model_attrs = []
 
-        def decorator(type_: Type[T]) -> Type[T]:
+        def decorator(python_type: Type[T]) -> Type[T]:
             self.logger.info(
-                f"Constructing GraphQL {'input' if as_input else 'type'} for {type_.__qualname__}"
+                f"Constructing GraphQL {'input' if as_input else 'type'} for {python_type.__qualname__}"
             )
             if as_input:
                 factory = self.input_factory
@@ -72,14 +98,14 @@ class FastGraphQL:
                 factory = self.type_factory
 
             graphql_type, _ = factory.create_graphql_type(
-                type_=type_,
+                python_type=python_type,
                 name=name,
                 exclude_model_attrs=exclude_model_attrs,
             )
             if not isinstance(graphql_type, GraphQLType):  # pragma: no cover
                 raise Exception("Something went wrong")
 
-            return type_
+            return python_type
 
         return decorator
 
@@ -158,4 +184,4 @@ class FastGraphQL:
     def graphql_query_field(
         self, name: Optional[str] = None, graphql_scalar: Optional[GraphQLScalar] = None
     ) -> Any:
-        return GraphQLQueryField(name=name, type_=graphql_scalar)
+        return GraphQLQueryField(name=name, graphql_type=graphql_scalar)

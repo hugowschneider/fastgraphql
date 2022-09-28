@@ -12,7 +12,8 @@ def get_env_bool(name: str, default_value: Optional[bool] = None) -> bool:
         if default_value is None:
             raise ValueError(f"Variable `{name}` not set!")
         else:
-            value = str(default_value)
+            return default_value
+
     if value.lower() not in true_ + false_:
         return False
     return value in true_

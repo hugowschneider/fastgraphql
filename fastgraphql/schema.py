@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import (
     Any,
     Dict,
@@ -12,9 +13,12 @@ from typing import (
     TypeVar,
 )
 
+from pydantic import BaseModel
+
 from fastgraphql.exceptions import GraphQLSchemaException
 
 T_ANY = TypeVar("T_ANY")
+T = TypeVar("T", bound=BaseModel)
 
 
 class GraphQLTypeEngine:
@@ -25,7 +29,6 @@ class GraphQLTypeEngine:
 class GraphQLDataType(GraphQLTypeEngine):
     def __init__(self) -> None:
         super().__init__()
-        self.default_resolver: Optional[Callable[..., Any]] = None
 
     def ref(self, nullable: bool = False) -> "GraphQLReference":
         raise NotImplementedError  # pragma: no cover
@@ -54,6 +57,7 @@ class GraphQLType(GraphQLDataType):
     def __init__(
         self,
         name: str,
+        python_type: Type[T],
         attrs: Optional[List[GraphQLTypeAttribute]] = None,
         as_input: bool = False,
     ):
@@ -63,6 +67,7 @@ class GraphQLType(GraphQLDataType):
             attrs = []
         self.attrs = attrs
         self.as_input = as_input
+        self.resolver = lambda attrs: python_type(**attrs)
 
     def add_attribute(self, field: GraphQLTypeAttribute) -> None:
         self.attrs.append(field)
@@ -80,19 +85,6 @@ class GraphQLType(GraphQLDataType):
         """.strip()
 
 
-class GraphQLScalar(GraphQLDataType):
-    def __init__(self, name: str):
-        super().__init__()
-        self.name = name
-        self._default_scalar = False
-
-    def render(self) -> str:
-        return f"scalar {self.name}"
-
-    def ref(self, nullable: bool = False) -> GraphQLReference:
-        return GraphQLReference(self.name, nullable=nullable)
-
-
 class GraphQLArray(GraphQLDataType):
     def __init__(self, item_type: GraphQLDataType):
         super().__init__()
@@ -103,6 +95,21 @@ class GraphQLArray(GraphQLDataType):
 
     def ref(self, nullable: bool = False) -> GraphQLReference:
         return GraphQLReference(reference=self.render(), nullable=nullable)
+
+
+class GraphQLScalar(GraphQLDataType):
+    def __init__(self, name: str):
+        super().__init__()
+        self.name = name
+        self._default_scalar = False
+        self.encoder: Optional[Callable[..., Any]] = None
+        self.decoder: Optional[Callable[..., Any]] = None
+
+    def render(self) -> str:
+        return f"scalar {self.name}"
+
+    def ref(self, nullable: bool = False) -> GraphQLReference:
+        return GraphQLReference(self.name, nullable=nullable)
 
 
 class GraphQLBoolean(GraphQLScalar):
@@ -136,18 +143,31 @@ class GraphQLID(GraphQLScalar):
 
 
 class GraphQLDateTime(GraphQLScalar):
-    def __init__(self) -> None:
+    def __init__(self, date_time_format: str) -> None:
         super().__init__("DateTime")
+
+        def encoder(s: datetime) -> str:
+            return s.strftime(date_time_format)
+
+        def decoder(s: str) -> datetime:
+            return datetime.strptime(s, date_time_format)
+
+        self.encoder = encoder
+        self.decoder = decoder
 
 
 class GraphQLDate(GraphQLScalar):
-    def __init__(self) -> None:
+    def __init__(self, date_format: str) -> None:
         super().__init__("Date")
+        self.encoder = lambda x: x.strftime(date_format)
+        self.decoder = lambda x: datetime.strptime(x, date_format).date()
 
 
 class GraphQLTime(GraphQLScalar):
-    def __init__(self) -> None:
+    def __init__(self, time_format: str) -> None:
         super().__init__("Time")
+        self.encoder = lambda x: x.strftime(time_format)
+        self.decoder = lambda x: datetime.strptime(x, time_format).time()
 
 
 class InjectedFunctionParameter:
@@ -163,10 +183,10 @@ class InjectedFunctionParameter:
 
 class GraphQLFunctionField(GraphQLTypeEngine, InjectedFunctionParameter):
     def __init__(
-        self, type_: Optional[GraphQLDataType] = None, name: Optional[str] = None
+        self, graphql_type: Optional[GraphQLDataType] = None, name: Optional[str] = None
     ):
         super().__init__(name=name)
-        self.type = type_
+        self.type = graphql_type
         self.python_name: str = ""
 
     def set_name(self, name: str) -> None:
