@@ -46,6 +46,10 @@ class FastGraphQL:
             type_factory=self.type_factory,
         )
 
+        self.time_format = "%H:%M:%S%z"
+        self.date_format = "%Y-%m-%d"
+        self.date_time_format = f"{self.date_format}T{self.time_format}"
+
     def render(self) -> str:
         return self.schema.render()
 

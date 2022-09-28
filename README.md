@@ -68,7 +68,7 @@ print(fast_graphql.render())
 The above code example generates a schema as follows:
 
 ```graphql
-scalar Date
+scalar DateTime
 
 type Model {
     t_int: Int!
@@ -77,8 +77,8 @@ type Model {
     t_opt_str: String
     t_float: Float!
     t_opt_float: Float
-    t_datatime: Date!
-    t_opt_datatime: Date
+    t_datatime: DateTime!
+    t_opt_datatime: DateTime
     t_boolean: Boolean!
     t_opt_boolean: Boolean
 }

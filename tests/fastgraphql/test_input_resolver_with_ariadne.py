@@ -18,6 +18,7 @@ fast_graphql = FastGraphQL()
 @fast_graphql.graphql_input(name="ModelInput")
 class Model(BaseModel):
     t_int: int
+    t_date: datetime
 
 
 @fast_graphql.graphql_query()
@@ -84,8 +85,8 @@ query StdTypeQuery(
             $t_opt_str: String,
             $t_float: Float!,
             $t_opt_float: Float,
-            $t_datatime: Date!,
-            $t_opt_datatime: Date,
+            $t_datatime: DateTime!,
+            $t_opt_datatime: DateTime,
             $t_boolean: Boolean!,
             $t_opt_boolean: Boolean,
 ){
@@ -127,10 +128,15 @@ query StdTypeQuery(
         }
         response = self.test_client.post(
             "/graphql",
-            data=json.dumps({"query": query, "variables": variables}, default=str),
+            data=json.dumps(
+                {"query": query, "variables": variables},
+                default=lambda x: x.isoformat(),
+            ),
             headers={"Content-Type": "application/json"},
         )
+
         assert response.status_code == 200, response.json()
+        assert "errors" not in response.json(), response.json()
         assert "data" in response.json(), response.json()
         assert "std_type_query" in response.json()["data"]
         assert hasattr(std_type_query, "__called__") and getattr(
@@ -159,8 +165,8 @@ query StdTypeQuery(
             $t_opt_str: String,
             $t_float: Float!,
             $t_opt_float: Float,
-            $t_datatime: Date!,
-            $t_opt_datatime: Date,
+            $t_datatime: DateTime!,
+            $t_opt_datatime: DateTime,
             $t_boolean: Boolean!,
             $t_opt_boolean: Boolean,
 ){
@@ -202,10 +208,14 @@ query StdTypeQuery(
         }
         response = self.test_client.post(
             "/graphql",
-            data=json.dumps({"query": query, "variables": variables}, default=str),
+            data=json.dumps(
+                {"query": query, "variables": variables},
+                default=lambda x: x.isoformat(),
+            ),
             headers={"Content-Type": "application/json"},
         )
         assert response.status_code == 200, response.json()
+        assert "errors" not in response.json(), response.json()
         assert "data" in response.json(), response.json()
         assert "std_type_query" in response.json()["data"]
         assert hasattr(std_type_query, "__called__") and getattr(
@@ -223,4 +233,50 @@ query StdTypeQuery(
         assert isinstance(parameters["t_opt_datatime"], datetime)
         assert isinstance(parameters["t_boolean"], bool)
         assert isinstance(parameters["t_opt_boolean"], bool)
+        assert parameters == variables
+
+    def test_graphql_model_input_resolver(self) -> None:
+        query = """
+query StdTypeQuery(
+            $model: ModelInput!
+){
+    model_query(
+            model: $model,
+    ) {
+        t_int
+        t_date
+    }
+}
+        """.strip()
+        model = Model(
+            t_int=1,
+            t_date=datetime(
+                year=2022,
+                month=10,
+                day=1,
+                hour=8,
+                minute=25,
+                second=11,
+                microsecond=0,
+                tzinfo=timezone(timedelta(hours=-2)),
+            ),
+        )
+        variables = {"model": model.dict()}
+        response = self.test_client.post(
+            "/graphql",
+            data=json.dumps(
+                {"query": query, "variables": variables},
+                default=lambda x: x.isoformat(),
+            ),
+            headers={"Content-Type": "application/json"},
+        )
+
+        assert response.status_code == 200, response.json()
+        assert "errors" not in response.json(), response.json()
+        assert "data" in response.json(), response.json()
+        assert "model_query" in response.json()["data"], response.json()
+        assert hasattr(model_query, "__called__") and getattr(model_query, "__called__")
+        parameters = getattr(model_query, "__parameters__")
+        assert parameters
+        assert isinstance(parameters["model"], Model)
         assert parameters == variables

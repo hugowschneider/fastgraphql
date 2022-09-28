@@ -70,11 +70,11 @@ type Mutation {{
             return ""  # pragma: no cover
 
         expected_query_definition = """
-sample_mutation(t_int: Int!, t_opt_int: Int, t_str: String!, t_opt_str: String, t_float: Float!, t_opt_float: Float, t_datatime: Date!, t_opt_datatime: Date, t_boolean: Boolean!, t_opt_boolean: Boolean): String!        
+sample_mutation(t_int: Int!, t_opt_int: Int, t_str: String!, t_opt_str: String, t_float: Float!, t_opt_float: Float, t_datatime: DateTime!, t_opt_datatime: DateTime, t_boolean: Boolean!, t_opt_boolean: Boolean): String!        
         """.strip()
 
         expected_graphql_definition = f"""
-scalar Date
+scalar DateTime
 
 type Mutation {{
     {expected_query_definition}

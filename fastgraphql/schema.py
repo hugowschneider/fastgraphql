@@ -12,8 +12,6 @@ from typing import (
     TypeVar,
 )
 
-from dateutil import parser
-
 from fastgraphql.exceptions import GraphQLSchemaException
 
 T_ANY = TypeVar("T_ANY")
@@ -137,10 +135,19 @@ class GraphQLID(GraphQLScalar):
         self._default_scalar = True
 
 
+class GraphQLDateTime(GraphQLScalar):
+    def __init__(self) -> None:
+        super().__init__("DateTime")
+
+
 class GraphQLDate(GraphQLScalar):
     def __init__(self) -> None:
         super().__init__("Date")
-        self.default_resolver = parser.parse
+
+
+class GraphQLTime(GraphQLScalar):
+    def __init__(self) -> None:
+        super().__init__("Time")
 
 
 class InjectedFunctionParameter:

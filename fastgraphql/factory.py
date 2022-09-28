@@ -1,5 +1,5 @@
 import inspect
-from datetime import date
+from datetime import date, datetime, time
 from typing import (
     Iterable,
     List,
@@ -35,6 +35,8 @@ from fastgraphql.schema import (
     SelfGraphQLType,
     SelfGraphQLFunction,
     GraphQLDate,
+    GraphQLTime,
+    GraphQLDateTime,
 )
 
 T = TypeVar("T", bound=BaseModel)
@@ -83,6 +85,10 @@ class GraphQLTypeFactory:
             return GraphQLInteger(), False
         if issubclass(type_, float):
             return GraphQLFloat(), False
+        if issubclass(type_, datetime):
+            return GraphQLDateTime(), False
+        if issubclass(type_, time):
+            return GraphQLTime(), False
         if issubclass(type_, date):
             return GraphQLDate(), False
 
@@ -111,6 +117,7 @@ class GraphQLTypeFactory:
 
         field: ModelField
         graphql_type = GraphQLType(name=name, as_input=self.input_factory)
+        graphql_type.default_resolver = lambda x: type_(**x)
         for _, field in type_.__fields__.items():
             if field.name in exclude_model_attrs:
                 continue

@@ -1,7 +1,10 @@
-from fastapi.routing import APIRouter
-
 from fastgraphql import FastGraphQL
 from fastgraphql.ariadne import make_graphql_asgi
+
+try:
+    from fastapi.routing import APIRouter
+except ImportError as e:
+    raise ImportError(f"{e}.\nPlease use `pip install fastgraphql[ariadne]`")
 
 
 def make_ariadne_fastapi_router(
