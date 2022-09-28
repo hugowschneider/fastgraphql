@@ -12,6 +12,8 @@ from typing import (
     TypeVar,
 )
 
+from dateutil import parser
+
 from fastgraphql.exceptions import GraphQLSchemaException
 
 T_ANY = TypeVar("T_ANY")
@@ -23,6 +25,10 @@ class GraphQLTypeEngine:
 
 
 class GraphQLDataType(GraphQLTypeEngine):
+    def __init__(self) -> None:
+        super().__init__()
+        self.default_resolver: Optional[Callable[..., Any]] = None
+
     def ref(self, nullable: bool = False) -> "GraphQLReference":
         raise NotImplementedError  # pragma: no cover
 
@@ -37,7 +43,8 @@ class GraphQLTypeAttribute:
 
 
 class GraphQLReference(GraphQLDataType):
-    def __init__(self, reference: str, nullable: bool = False):
+    def __init__(self, reference: str, nullable: bool = False) -> None:
+        super().__init__()
         self.reference = reference
         self.nullable = nullable
 
@@ -52,6 +59,7 @@ class GraphQLType(GraphQLDataType):
         attrs: Optional[List[GraphQLTypeAttribute]] = None,
         as_input: bool = False,
     ):
+        super().__init__()
         self.name = name
         if not attrs:
             attrs = []
@@ -76,6 +84,7 @@ class GraphQLType(GraphQLDataType):
 
 class GraphQLScalar(GraphQLDataType):
     def __init__(self, name: str):
+        super().__init__()
         self.name = name
         self._default_scalar = False
 
@@ -88,6 +97,7 @@ class GraphQLScalar(GraphQLDataType):
 
 class GraphQLArray(GraphQLDataType):
     def __init__(self, item_type: GraphQLDataType):
+        super().__init__()
         self.item_type = item_type
 
     def render(self) -> str:
@@ -127,14 +137,20 @@ class GraphQLID(GraphQLScalar):
         self._default_scalar = True
 
 
+class GraphQLDate(GraphQLScalar):
+    def __init__(self) -> None:
+        super().__init__("Date")
+        self.default_resolver = parser.parse
+
+
 class InjectedFunctionParameter:
     def __init__(self, name: Optional[str] = None):
-        self.resolver = None
+        self.resolver: Optional[Callable[..., Any]] = None
         self.name = name
 
-    def construct_value(self, input: Any) -> Any:
-        if _ := self.resolver:
-            return input
+    def resolve(self, input: Any) -> Any:
+        if r := self.resolver:
+            return r(input)
         return input
 
 
@@ -144,12 +160,13 @@ class GraphQLFunctionField(GraphQLTypeEngine, InjectedFunctionParameter):
     ):
         super().__init__(name=name)
         self.type = type_
-
-    def set_type(self, type_: GraphQLDataType) -> None:
-        self.type = type_
+        self.python_name: str = ""
 
     def set_name(self, name: str) -> None:
         self.name = name
+
+    def set_python_name(self, python_name: str) -> None:
+        self.python_name = python_name
 
     def render(self) -> str:
         assert self.type

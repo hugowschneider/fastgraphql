@@ -20,8 +20,8 @@ class Model(BaseModel):
 
 
 @fast_graphql.graphql_query()
-def simple_query() -> str:
-    setattr(simple_query, "__called__", True)
+def sample_query() -> str:
+    setattr(sample_query, "__called__", True)
     return "result"
 
 
@@ -60,12 +60,12 @@ query IntrospectionQuery {
 
         query = """
 query {
-    simple_query 
+    sample_query 
 }
 """.strip()
         response = self.test_client.post("/graphql", json={"query": query})
         assert response.status_code == 200, response.json()
-        assert response.json()["data"]["simple_query"] == "result"
-        assert hasattr(simple_query, "__called__") and getattr(
-            simple_query, "__called__"
+        assert response.json()["data"]["sample_query"] == "result"
+        assert hasattr(sample_query, "__called__") and getattr(
+            sample_query, "__called__"
         )

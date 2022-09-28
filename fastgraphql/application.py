@@ -133,6 +133,16 @@ class FastGraphQL:
             @functools.wraps(func)
             def _decorator(*args: Tuple[Any], **kwargs: Dict[str, Any]) -> T_ANY:
                 resolved_kwargs: Dict[str, Any] = {}
+                for parameter in graphql_type.parameters:
+                    python_name = parameter.python_name
+                    name = parameter.name
+                    assert python_name
+                    assert name
+                    value = kwargs[name]
+                    resolved_kwargs[python_name] = (
+                        parameter.resolve(value) if value is not None else None
+                    )
+
                 return func(**resolved_kwargs)
 
             graphql_type.resolver = _decorator

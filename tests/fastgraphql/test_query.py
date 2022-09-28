@@ -77,6 +77,8 @@ sample_query(t_int: Int!, t_opt_int: Int, t_str: String!, t_opt_str: String, t_f
         """.strip()
 
         expected_graphql_definition = f"""
+scalar Date
+
 type Query {{
     {expected_query_definition}
 }}""".strip()

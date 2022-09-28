@@ -34,6 +34,7 @@ from fastgraphql.schema import (
     GraphQLFunctionField,
     SelfGraphQLType,
     SelfGraphQLFunction,
+    GraphQLDate,
 )
 
 T = TypeVar("T", bound=BaseModel)
@@ -83,8 +84,7 @@ class GraphQLTypeFactory:
         if issubclass(type_, float):
             return GraphQLFloat(), False
         if issubclass(type_, date):
-            scalar = GraphQLScalar("Date")
-            return scalar, False
+            return GraphQLDate(), False
 
         raise RuntimeError(  # pragma: no cover
             f"Type {type_.__class__.__name__} is still not implement but pydantic should have caught this error"
@@ -192,6 +192,8 @@ class GraphQLFunctionFactory:
         for param_name, definition in func_signature.parameters.items():
             if isinstance(definition.default, GraphQLFunctionField):
                 func_parameter: GraphQLFunctionField = definition.default
+                func_parameter.set_python_name(param_name)
+
                 if definition.annotation == inspect.Parameter.empty:
                     raise Exception(
                         f"Method {func.__qualname__} defines a {GraphQLFunctionField.__name__} without type definition."
@@ -200,14 +202,15 @@ class GraphQLFunctionFactory:
                     definition.annotation
                 )
                 if func_parameter.type:
-                    if (
-                        isinstance(func_parameter.type, GraphQLScalar)
-                        and not func_parameter.type._default_scalar
-                    ):
-                        self.schema.add_scalar(func_parameter.type)
                     graphql_type = func_parameter.type
+                if (
+                    isinstance(graphql_type, GraphQLScalar)
+                    and not graphql_type._default_scalar
+                ):
+                    self.schema.add_scalar(graphql_type)
 
-                func_parameter.set_type(graphql_type.ref(nullable=nullable))
+                func_parameter.type = graphql_type.ref(nullable=nullable)
+                func_parameter.resolver = graphql_type.default_resolver
                 if not func_parameter.name:
                     func_parameter.set_name(param_name)
                 graphql_query.add_parameter(func_parameter)

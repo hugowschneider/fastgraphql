@@ -74,6 +74,8 @@ sample_mutation(t_int: Int!, t_opt_int: Int, t_str: String!, t_opt_str: String, 
         """.strip()
 
         expected_graphql_definition = f"""
+scalar Date
+
 type Mutation {{
     {expected_query_definition}
 }}""".strip()
