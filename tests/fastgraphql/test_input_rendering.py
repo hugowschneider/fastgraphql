@@ -4,7 +4,8 @@ from typing import Optional, List
 from pydantic import BaseModel, Field
 
 from fastgraphql import FastGraphQL
-from fastgraphql.schema import GraphQLID, SelfGraphQL
+from fastgraphql.schema import SelfGraphQL
+from fastgraphql.scalars import GraphQLID
 
 
 class TestPydanticInputRendering:

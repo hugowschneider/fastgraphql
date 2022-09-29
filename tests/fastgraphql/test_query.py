@@ -1,12 +1,11 @@
 from datetime import datetime
 from typing import Optional
 
-import pytest
 from pydantic import BaseModel
 
 from fastgraphql import FastGraphQL
-from fastgraphql.exceptions import GraphQLSchemaException
-from fastgraphql.schema import SelfGraphQL, GraphQLScalar
+from fastgraphql.schema import SelfGraphQL
+from fastgraphql.scalars import GraphQLScalar
 
 
 class TestQueryRendering:
@@ -201,25 +200,3 @@ type Query {{
         assert self_graphql.as_query
         assert self_graphql.as_query.render() == expected_query_definition
         assert fast_graphql.render() == expected_graphql_definition
-
-    def test_name_conflict(self) -> None:
-        fast_graphql = FastGraphQL()
-        with pytest.raises(GraphQLSchemaException):
-
-            @fast_graphql.graphql_query()
-            def sample_query1() -> bool:
-                return False  # pragma: no cover
-
-            @fast_graphql.graphql_query(name="sample_query1")
-            def sample_query2() -> bool:
-                return False  # pragma: no cover
-
-        with pytest.raises(GraphQLSchemaException):
-
-            @fast_graphql.graphql_query()
-            def sample_query3() -> bool:
-                return False  # pragma: no cover
-
-            @fast_graphql.graphql_mutation(name="sample_query3")
-            def sample_query4() -> bool:
-                return False  # pragma: no cover

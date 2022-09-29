@@ -25,6 +25,12 @@ def sample_query() -> str:
     return "result"
 
 
+@fast_graphql.graphql_mutation()
+def sample_mutation() -> str:
+    setattr(sample_mutation, "__called__", True)
+    return "result"
+
+
 @pytest.fixture(scope="class", autouse=True)
 def fastapi_test(request: Any) -> None:
 
@@ -68,4 +74,16 @@ query {
         assert response.json()["data"]["sample_query"] == "result"
         assert hasattr(sample_query, "__called__") and getattr(
             sample_query, "__called__"
+        )
+
+        query = """
+mutation {
+    sample_mutation 
+}
+""".strip()
+        response = self.test_client.post("/graphql", json={"query": query})
+        assert response.status_code == 200, response.json()
+        assert response.json()["data"]["sample_mutation"] == "result"
+        assert hasattr(sample_mutation, "__called__") and getattr(
+            sample_mutation, "__called__"
         )

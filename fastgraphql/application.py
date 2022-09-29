@@ -15,13 +15,9 @@ from typing import (
 )
 from pydantic import BaseModel
 
-from fastgraphql.schema import (
-    GraphQLSchema,
-    GraphQLType,
-    GraphQLFunction,
-    GraphQLQueryField,
-    GraphQLScalar,
-)
+from fastgraphql.schema import GraphQLSchema
+from fastgraphql.types import GraphQLType, GraphQLQueryField, GraphQLFunction
+from fastgraphql.scalars import GraphQLScalar
 
 T = TypeVar("T", bound=BaseModel)
 T_ANY = TypeVar("T_ANY")
@@ -59,22 +55,22 @@ class FastGraphQL:
         )
 
     def get_date_format(self) -> str:
-        return self._date_formats.date_format
+        return self._date_formats.date_format.value
 
     def get_time_format(self) -> str:
-        return self._date_formats.time_format
+        return self._date_formats.time_format.value
 
     def get_date_time_format(self) -> str:
-        return self._date_formats.date_time_format
+        return self._date_formats.date_time_format.value
 
     def set_date_format(self, date_format: str) -> None:
-        self._date_formats.date_format = date_format
+        self._date_formats.date_format.set_value(date_format)
 
     def set_time_format(self, time_format: str) -> None:
-        self._date_formats.time_format = time_format
+        self._date_formats.time_format.set_value(time_format)
 
     def set_date_time_format(self, date_time_format: str) -> None:
-        self._date_formats.date_time_format = date_time_format
+        self._date_formats.date_time_format.set_value(date_time_format)
 
     def render(self) -> str:
         return self.schema.render()

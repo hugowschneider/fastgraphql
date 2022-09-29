@@ -12,32 +12,38 @@ from typing import (
     get_args,
     cast,
     Callable,
+    Any,
 )
 
 from pydantic.fields import ModelField
 from pydantic import BaseModel
 
-from fastgraphql.exceptions import GraphQLResolverException
+from fastgraphql.exceptions import GraphQLFactoryException
 from fastgraphql.schema import (
-    GraphQLDataType,
-    GraphQLArray,
-    GraphQLString,
-    GraphQLBoolean,
-    GraphQLInteger,
-    GraphQLFloat,
-    GraphQLScalar,
-    GraphQLType,
-    GraphQLTypeAttribute,
     GraphQLSchema,
     SelfGraphQL,
-    GraphQLFunction,
-    GraphQLFunctionField,
     SelfGraphQLType,
     SelfGraphQLFunction,
+)
+from fastgraphql.types import (
+    GraphQLDataType,
+    GraphQLTypeAttribute,
+    GraphQLType,
+    GraphQLArray,
+    GraphQLFunctionField,
+    GraphQLFunction,
+)
+from fastgraphql.scalars import (
+    GraphQLScalar,
+    GraphQLBoolean,
+    GraphQLInteger,
+    GraphQLString,
+    GraphQLFloat,
+    GraphQLDateTime,
     GraphQLDate,
     GraphQLTime,
-    GraphQLDateTime,
 )
+from fastgraphql.utils import MutableString
 
 T = TypeVar("T", bound=BaseModel)
 T_ANY = TypeVar("T_ANY")
@@ -47,9 +53,9 @@ class _DateFormats:
     def __init__(
         self, date_format: str, time_format: str, date_time_format: str
     ) -> None:
-        self.date_format = date_format
-        self.time_format = time_format
-        self.date_time_format = date_time_format
+        self.date_format = MutableString(date_format)
+        self.time_format = MutableString(time_format)
+        self.date_time_format = MutableString(date_time_format)
 
 
 class GraphQLTypeFactory:
@@ -70,7 +76,7 @@ class GraphQLTypeFactory:
 
     def create_graphql_type(
         self,
-        python_type: Type[T],
+        python_type: Type[Any],
         exclude_model_attrs: Optional[List[str]] = None,
         name: Optional[str] = None,
     ) -> Tuple[GraphQLDataType, bool]:
@@ -112,7 +118,7 @@ class GraphQLTypeFactory:
         if issubclass(python_type, date):
             return GraphQLDate(self.date_formats.date_format), False
 
-        raise RuntimeError(
+        raise GraphQLFactoryException(
             f"Type {python_type.__class__.__name__} is still not implement but pydantic should have caught this error"
         )
 
@@ -205,7 +211,7 @@ class GraphQLFunctionFactory:
         func_signature = inspect.signature(func)
 
         if func_signature.return_annotation == inspect.Parameter.empty:
-            raise GraphQLResolverException(
+            raise GraphQLFactoryException(
                 f"{'Mutation' if self.mutation_factory else 'Query'} {name} implemented in {func.__qualname__} does not have a return type annotation"
             )
 
@@ -223,7 +229,7 @@ class GraphQLFunctionFactory:
                 func_parameter.set_python_name(param_name)
 
                 if definition.annotation == inspect.Parameter.empty:
-                    raise Exception(
+                    raise GraphQLFactoryException(
                         f"Method {func.__qualname__} defines a {GraphQLFunctionField.__name__} without type definition."
                     )
                 graphql_type, nullable = self.input_factory.create_graphql_type(
