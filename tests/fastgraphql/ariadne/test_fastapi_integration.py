@@ -11,6 +11,8 @@ from pydantic import BaseModel
 from fastgraphql import FastGraphQL
 from fastgraphql.fastapi import make_ariadne_fastapi_router
 
+GRAPHQL_URL = "/graphql"
+
 fast_graphql = FastGraphQL()
 
 
@@ -48,7 +50,7 @@ class TestAriadneFastAPIIntegration:
 
     def test_graphql_api_rendering(self) -> None:
 
-        response = self.test_client.get("/graphql")
+        response = self.test_client.get(GRAPHQL_URL)
         assert response.status_code == 200
         query = """
 query IntrospectionQuery {
@@ -61,7 +63,7 @@ query IntrospectionQuery {
     }
 }
         """.strip()
-        response = self.test_client.post("/graphql", json={"query": query})
+        response = self.test_client.post(GRAPHQL_URL, json={"query": query})
         assert response.status_code == 200
 
         query = """
@@ -69,7 +71,7 @@ query {
     sample_query 
 }
 """.strip()
-        response = self.test_client.post("/graphql", json={"query": query})
+        response = self.test_client.post(GRAPHQL_URL, json={"query": query})
         assert response.status_code == 200, response.json()
         assert response.json()["data"]["sample_query"] == "result"
         assert hasattr(sample_query, "__called__") and getattr(
@@ -81,7 +83,7 @@ mutation {
     sample_mutation 
 }
 """.strip()
-        response = self.test_client.post("/graphql", json={"query": query})
+        response = self.test_client.post(GRAPHQL_URL, json={"query": query})
         assert response.status_code == 200, response.json()
         assert response.json()["data"]["sample_mutation"] == "result"
         assert hasattr(sample_mutation, "__called__") and getattr(

@@ -11,6 +11,9 @@ from pydantic import BaseModel
 from fastgraphql import FastGraphQL
 from fastgraphql.fastapi import make_ariadne_fastapi_router
 
+GRAPHQL_URL = "/graphql"
+JSON_CONTENT_TYPE_HEADER = {"Content-Type": "application/json"}
+
 fast_graphql = FastGraphQL()
 
 
@@ -127,12 +130,12 @@ query StdTypeQuery(
             "t_opt_boolean": None,
         }
         response = self.test_client.post(
-            "/graphql",
+            GRAPHQL_URL,
             data=json.dumps(
                 {"query": query, "variables": variables},
                 default=lambda x: x.isoformat(),
             ),
-            headers={"Content-Type": "application/json"},
+            headers=JSON_CONTENT_TYPE_HEADER,
         )
 
         assert response.status_code == 200, response.json()
@@ -207,12 +210,12 @@ query StdTypeQuery(
             "t_opt_boolean": False,
         }
         response = self.test_client.post(
-            "/graphql",
+            GRAPHQL_URL,
             data=json.dumps(
                 {"query": query, "variables": variables},
                 default=lambda x: x.isoformat(),
             ),
-            headers={"Content-Type": "application/json"},
+            headers=JSON_CONTENT_TYPE_HEADER,
         )
         assert response.status_code == 200, response.json()
         assert "errors" not in response.json(), response.json()
@@ -263,12 +266,12 @@ query StdTypeQuery(
         )
         variables = {"model": model.dict()}
         response = self.test_client.post(
-            "/graphql",
+            GRAPHQL_URL,
             data=json.dumps(
                 {"query": query, "variables": variables},
                 default=lambda x: x.isoformat(),
             ),
-            headers={"Content-Type": "application/json"},
+            headers=JSON_CONTENT_TYPE_HEADER,
         )
 
         assert response.status_code == 200, response.json()

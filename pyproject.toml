@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastgraphql"
-version = "0.0.2"
+version = "0.0.3"
 description = "FastGraphQL is intended to help developer create code driven GraphQL APIs"
 authors = ["Hugo Wruck Schneider <hugowschneider@gmail.com>"]
 license = "MIT"
@@ -54,3 +54,6 @@ addopts = [
 xfail_strict = true
 junit_family = "xunit2"
 testpaths = ["./tests"]
+
+[tool.coverage.run]
+relative_files = true

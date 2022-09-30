@@ -19,15 +19,6 @@ class GraphQLDataType:
         raise NotImplementedError  # pragma: no cover
 
 
-class GraphQLTypeAttribute:
-    def __init__(self, name: str, attr_type: GraphQLDataType):
-        self.name = name
-        self.attr_type = attr_type
-
-    def render(self) -> str:
-        return f"{self.name}: {self.attr_type.render()}"
-
-
 class GraphQLReference:
     def __init__(
         self, referenced_type: GraphQLDataType, nullable: bool = False
@@ -38,6 +29,15 @@ class GraphQLReference:
 
     def render(self) -> str:
         return f"{self.referenced_type.name}{'' if self.nullable else '!'}"
+
+
+class GraphQLTypeAttribute:
+    def __init__(self, name: str, attr_type: GraphQLReference):
+        self.name = name
+        self.attr_type = attr_type
+
+    def render(self) -> str:
+        return f"{self.name}: {self.attr_type.render()}"
 
 
 class GraphQLType(GraphQLDataType):
