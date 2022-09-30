@@ -7,7 +7,8 @@ from fastapi.testclient import TestClient
 
 from fastgraphql import FastGraphQL
 from fastgraphql.fastapi import make_ariadne_fastapi_router
-from tests.utils import render_graphql_error_response
+
+GRAPHQL_URL = "/graphql"
 
 fast_graphql = FastGraphQL()
 
@@ -115,10 +116,10 @@ query {
         """.strip()
 
         response = self.test_client.post(
-            "/graphql",
+            GRAPHQL_URL,
             json={"query": query},
         )
-        print(render_graphql_error_response(response.json()))
+
         assert response.status_code == 200, response.json()
         assert "errors" not in response.json(), response.json()
         assert "data" in response.json(), response.json()
@@ -138,10 +139,9 @@ query {
         """.strip()
 
         response = self.test_client.post(
-            "/graphql",
+            GRAPHQL_URL,
             json={"query": query},
         )
-        print(render_graphql_error_response(response.json()))
         assert response.status_code == 200, response.json()
         assert "errors" not in response.json(), response.json()
         assert "data" in response.json(), response.json()
@@ -167,10 +167,9 @@ query {
         """.strip()
 
         response = self.test_client.post(
-            "/graphql",
+            GRAPHQL_URL,
             json={"query": query},
         )
-        print(render_graphql_error_response(response.json()))
         assert response.status_code == 200, response.json()
         assert "errors" not in response.json(), response.json()
         assert "data" in response.json(), response.json()

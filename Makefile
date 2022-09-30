@@ -3,7 +3,7 @@ export SRC_PATH=./fastgraphql
 export TEST_PATH=./tests
 
 test:
-	@poetry run pytest --cov=fastgraphql --cov=tests --cov-report=term-missing:skip-covered --cov-report=xml:build/coverage.xml
+	@poetry run pytest --cov=fastgraphql --cov=tests --cov-report=term-missing:skip-covered --cov-report=xml:build/coverage.xml --junitxml=build/junit.xml
 
 lint:
 	@poetry run black --check $(SRC_PATH) $(TEST_PATH)

@@ -23,15 +23,7 @@ def make_executable_schema(fast_graqhql: FastGraphQL) -> GraphQLSchema:
     query = QueryType()
     bindables: List[SchemaBindable] = []
     if len(fast_graqhql.schema.scalars):
-        for name, scalar in fast_graqhql.schema.scalars.items():
-            if not scalar.default_scalar and (scalar.decoder or scalar.encoder):
-                bindables.append(
-                    ScalarType(
-                        scalar.name,
-                        serializer=scalar.encoder,
-                        value_parser=scalar.decoder,
-                    )
-                )
+        bind_scalars(bindables, fast_graqhql)
 
     if len(fast_graqhql.schema.queries):
         bindables.append(query)
@@ -46,6 +38,18 @@ def make_executable_schema(fast_graqhql: FastGraphQL) -> GraphQLSchema:
                 mutation.set_field(name, r)
 
     return ariadne_make_executable_schema(fast_graqhql.render(), *bindables)
+
+
+def bind_scalars(bindables: List[SchemaBindable], fast_graqhql: FastGraphQL) -> None:
+    for name, scalar in fast_graqhql.schema.scalars.items():
+        if not scalar.default_scalar and (scalar.decoder or scalar.encoder):
+            bindables.append(
+                ScalarType(
+                    scalar.name,
+                    serializer=scalar.encoder,
+                    value_parser=scalar.decoder,
+                )
+            )
 
 
 def make_graphql_asgi(fast_graqhql: FastGraphQL) -> GraphQL:
