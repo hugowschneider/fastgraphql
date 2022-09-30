@@ -150,19 +150,7 @@ class GraphQLTypeFactory:
         for _, field in python_type.__fields__.items():
             if field.name in exclude_model_attrs:
                 continue
-            if "graphql_scalar" in field.field_info.extra:
-                graphql_attr_type, nullable = (
-                    field.field_info.extra["graphql_scalar"],
-                    field.allow_none,
-                )
-            else:
-                graphql_attr_type, nullable = self.create_graphql_type(field.annotation)
-
-            if (
-                isinstance(graphql_attr_type, GraphQLScalar)
-                and not graphql_attr_type.default_scalar
-            ):
-                self.schema.add_scalar(graphql_attr_type)
+            graphql_attr_type, nullable = self.model_field_factory(field)
 
             graphql_type.add_attribute(
                 GraphQLTypeAttribute(
@@ -179,6 +167,21 @@ class GraphQLTypeFactory:
         else:
             self.schema.add_type(graphql_type=graphql_type)
         return graphql_type
+
+    def model_field_factory(self, field: ModelField) -> Tuple[GraphQLDataType, bool]:
+        if "graphql_scalar" in field.field_info.extra:
+            graphql_attr_type, nullable = (
+                field.field_info.extra["graphql_scalar"],
+                field.allow_none,
+            )
+        else:
+            graphql_attr_type, nullable = self.create_graphql_type(field.annotation)
+        if (
+            isinstance(graphql_attr_type, GraphQLScalar)
+            and not graphql_attr_type.default_scalar
+        ):
+            self.schema.add_scalar(graphql_attr_type)
+        return graphql_attr_type, nullable
 
     def add_graphql_metadata(
         self, input_type: Type[T], graphql_type: GraphQLType

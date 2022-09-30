@@ -54,20 +54,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            -Dsonar.projectKey=hugowschneider_fastgraphql
-            -Dsonar.organization=hugowschneider
-            -Dsonar.projectName=fastgraphql
-            -Dsonar.language=python
-            -Dsonar.python.version=3.8,3.9,3.10
-            -Dsonar.sources=./
-            -Dsonar.exclusions=**/__init__.py
-            -Dsonar.sourceEncoding=UTF-8
-            -Dsonar.links.homepage=https://github.com/hugowschneider/fastgraphql
-            -Dsonar.links.ci=https://github.com/hugowschneider/fastgraphql/actions
-            -Dsonar.links.scm=https://github.com/hugowschneider/fastgraphql
-            -Dsonar.links.issue=https://github.com/hugowschneider/fastgraphql/issues
-            -Dsonar.python.xunit.reportPath=build/junit.xml
-            -Dsonar.python.coverage.reportPaths=build/coverage.xml
-            -Dsonar.cpd.exclusions=tests/**
