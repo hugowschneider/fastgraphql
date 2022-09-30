@@ -2,6 +2,7 @@ import functools
 import inspect
 import logging
 
+from fastgraphql.exceptions import GraphQLRunTimeError
 from fastgraphql.factory import GraphQLTypeFactory, GraphQLFunctionFactory, _DateFormats
 
 from typing import (
@@ -101,7 +102,7 @@ class FastGraphQL:
                 exclude_model_attrs=exclude_model_attrs,
             )
             if not isinstance(graphql_type, GraphQLType):  # pragma: no cover
-                raise Exception("Something went wrong")
+                raise GraphQLRunTimeError("Something went wrong")
 
             return python_type
 
@@ -144,7 +145,7 @@ class FastGraphQL:
     ) -> Callable[..., Callable[..., T_ANY]]:
         def decorator(func: Callable[..., T_ANY]) -> Callable[..., T_ANY]:
             self.logger.info(
-                f"Constructing GraphQL {'input' if False else 'query'} for {func.__qualname__}"
+                f"Constructing GraphQL {'mutation' if as_mutation else 'query'} for {func.__qualname__}"
             )
             if as_mutation:
                 graphql_type = self.mutation_factory.create_function(
@@ -156,7 +157,7 @@ class FastGraphQL:
                 self.schema.add_query(graphql_type)
 
             if not isinstance(graphql_type, GraphQLFunction):  # pragma: no cover
-                raise Exception("Something went wrong")
+                raise GraphQLRunTimeError("Something went wrong")
 
             @functools.wraps(func)
             def _decorator(*args: Tuple[Any], **kwargs: Dict[str, Any]) -> T_ANY:

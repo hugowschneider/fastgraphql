@@ -71,4 +71,3 @@ jobs:
             -Dsonar.python.xunit.reportPath=build/junit.xml
             -Dsonar.python.coverage.reportPaths=build/coverage.xml
             -Dsonar.cpd.exclusions=tests/**
-            -Dsonar.verbose=true

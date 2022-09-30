@@ -7,6 +7,10 @@ from fastgraphql import FastGraphQL
 from fastgraphql.schema import SelfGraphQL
 from fastgraphql.scalars import GraphQLScalar, GraphQLID
 
+expected_scalar_def = """
+scalar DateTime
+        """.strip()
+
 
 class TestPydanticTypeRendering:
     def test_simple_type(self) -> None:
@@ -24,10 +28,6 @@ class TestPydanticTypeRendering:
             t_opt_datatime: Optional[datetime]
             t_boolean: bool
             t_opt_boolean: Optional[bool]
-
-        expected_scalar_def = """
-scalar DateTime
-        """.strip()
 
         expected_graphql_def = """
 type TypeWithoutReferences {
@@ -67,10 +67,6 @@ type TypeWithoutReferences {
             t_datatime: datetime
             t_opt_datatime: Optional[datetime]
 
-        expected_scalar_def = """
-    scalar DateTime
-            """.strip()
-
         expected_graphql_def = """
 type Type1 {
     t_int: Int!
@@ -108,10 +104,6 @@ type Type1 {
         class TypeWithReference(BaseModel):
             t_int: int
             t_type_with_references: TypeWithoutReferences
-
-        expected_scalar_def = """
-scalar DateTime
-        """.strip()
 
         expected_graphql_def = """
 type TypeWithReference {
@@ -152,10 +144,6 @@ type TypeWithReference {
             t_int: int
             t_type_with_references: TypeWithoutReferences
 
-        expected_scalar_def = """
-scalar DateTime
-        """.strip()
-
         expected_graphql_def = """
 type Type2 {
     t_int: Int!
@@ -193,10 +181,6 @@ type Type2 {
             t_opt_float: Optional[float]
             t_datatime: datetime
             t_opt_datatime: Optional[datetime]
-
-        expected_scalar_def = """
-scalar DateTime
-        """.strip()
 
         expected_graphql_def = """
 type TypeWithoutReferences {

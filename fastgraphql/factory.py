@@ -1,5 +1,6 @@
 import inspect
 from datetime import date, datetime, time
+from inspect import Parameter
 from typing import (
     Iterable,
     List,
@@ -137,8 +138,8 @@ class GraphQLTypeFactory:
             name = str(python_type.__name__)
 
         if i := SelfGraphQL.introspect(python_type):
-            if self.input_factory and (graphql_type := i.as_input):
-                return graphql_type
+            if self.input_factory and (graphql_input := i.as_input):
+                return graphql_input
             elif not self.input_factory and (graphql_type := i.as_type):
                 return graphql_type
 
@@ -226,30 +227,9 @@ class GraphQLFunctionFactory:
 
         for param_name, definition in func_signature.parameters.items():
             if isinstance(definition.default, GraphQLFunctionField):
-                func_parameter: GraphQLFunctionField = definition.default
-                func_parameter.set_python_name(param_name)
-
-                if definition.annotation == inspect.Parameter.empty:
-                    raise GraphQLFactoryException(
-                        f"Method {func.__qualname__} defines a {GraphQLFunctionField.__name__} without type definition."
-                    )
-                graphql_type, nullable = self.input_factory.create_graphql_type(
-                    definition.annotation
+                graphql_query.add_parameter(
+                    self.parameter_factory(definition, func, param_name)
                 )
-                if func_parameter.reference:
-                    graphql_type = func_parameter.reference.referenced_type
-                if (
-                    isinstance(graphql_type, GraphQLScalar)
-                    and not graphql_type.default_scalar
-                ):
-                    self.schema.add_scalar(graphql_type)
-
-                func_parameter.reference = graphql_type.ref(nullable=nullable)
-                if isinstance(graphql_type, GraphQLType):
-                    func_parameter.python_type = graphql_type.python_type
-                if not func_parameter.name:
-                    func_parameter.set_name(param_name)
-                graphql_query.add_parameter(func_parameter)
             elif isinstance(definition.default, InjectableFunction):
                 graphql_query.add_injected_parameter(
                     name=param_name,
@@ -258,6 +238,29 @@ class GraphQLFunctionFactory:
         self.add_graphql_metadata(func=func, graphql_function=graphql_query)
 
         return graphql_query
+
+    def parameter_factory(
+        self, definition: Parameter, func: Callable[..., Any], param_name: str
+    ) -> GraphQLFunctionField:
+        func_parameter: GraphQLFunctionField = definition.default
+        func_parameter.set_python_name(param_name)
+        if definition.annotation == inspect.Parameter.empty:
+            raise GraphQLFactoryException(
+                f"Method {func.__qualname__} defines a {GraphQLFunctionField.__name__} without type definition."
+            )
+        graphql_type, nullable = self.input_factory.create_graphql_type(
+            definition.annotation
+        )
+        if func_parameter.reference:
+            graphql_type = func_parameter.reference.referenced_type
+        if isinstance(graphql_type, GraphQLScalar) and not graphql_type.default_scalar:
+            self.schema.add_scalar(graphql_type)
+        func_parameter.reference = graphql_type.ref(nullable=nullable)
+        if isinstance(graphql_type, GraphQLType):
+            func_parameter.python_type = graphql_type.python_type
+        if not func_parameter.name:
+            func_parameter.set_name(param_name)
+        return func_parameter
 
     def dependency_injection_factory(
         self, injectable_function: InjectableFunction
