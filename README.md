@@ -127,3 +127,38 @@ type Query {
     my_first_query(model: Model!, param: String!): String!
 }
 ```
+
+# Dependecy Injection
+Query and Mutation can have dependencies injected using `FastGraphQL.depende(...)` as showed bellow:`
+```python
+from fastgraphql import FastGraphQL
+from pydantic import BaseModel
+fast_graphql = FastGraphQL()
+
+class Model(BaseModel):
+    param: str
+
+def create_dependency() -> str:
+    return ""
+    
+@fast_graphql.graphql_query()
+def my_first_query(
+        model: Model = fast_graphql.graphql_query_field(),
+        dependecy: str = fast_graphql.depends(create_dependency)
+) -> str:
+    ...
+
+```
+In this example the parameter `dependecy` will be injected once the query is called. 
+
+# Integrations
+
+## Ariadne
+...
+
+## FastAPI
+...
+
+# Acknowledgment
+
+Thanks [FastAPI](https://fastapi.tiangolo.com) for inpirations

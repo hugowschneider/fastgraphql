@@ -8,6 +8,7 @@ from starlette.testclient import TestClient
 
 from fastgraphql import FastGraphQL
 from fastgraphql.fastapi import make_ariadne_fastapi_router
+from tests.utils import render_graphql_error_response
 
 fast_graphql = FastGraphQL()
 
@@ -79,8 +80,13 @@ query StdTypeQuery(
             ),
             headers={"Content-Type": "application/json"},
         )
-        assert response.status_code == 200, response.json()
-        assert "errors" not in response.json(), response.json()
+
+        assert response.status_code == 200, render_graphql_error_response(
+            response.json()
+        )
+        assert "errors" not in response.json(), render_graphql_error_response(
+            response.json()
+        )
         assert "data" in response.json(), response.json()
         assert "date_query" in response.json()["data"], response.json()
         assert hasattr(date_query, "__called__") and getattr(date_query, "__called__")

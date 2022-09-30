@@ -19,6 +19,7 @@ from pydantic.fields import ModelField
 from pydantic import BaseModel
 
 from fastgraphql.exceptions import GraphQLFactoryException
+from fastgraphql.injection import InjectableFunction
 from fastgraphql.schema import (
     GraphQLSchema,
     SelfGraphQL,
@@ -158,7 +159,7 @@ class GraphQLTypeFactory:
 
             if (
                 isinstance(graphql_attr_type, GraphQLScalar)
-                and not graphql_attr_type._default_scalar
+                and not graphql_attr_type.default_scalar
             ):
                 self.schema.add_scalar(graphql_attr_type)
 
@@ -235,24 +236,42 @@ class GraphQLFunctionFactory:
                 graphql_type, nullable = self.input_factory.create_graphql_type(
                     definition.annotation
                 )
-                if func_parameter.type:
-                    graphql_type = func_parameter.type
+                if func_parameter.reference:
+                    graphql_type = func_parameter.reference.referenced_type
                 if (
                     isinstance(graphql_type, GraphQLScalar)
-                    and not graphql_type._default_scalar
+                    and not graphql_type.default_scalar
                 ):
                     self.schema.add_scalar(graphql_type)
 
-                func_parameter.type = graphql_type.ref(nullable=nullable)
+                func_parameter.reference = graphql_type.ref(nullable=nullable)
                 if isinstance(graphql_type, GraphQLType):
-                    func_parameter.resolver = graphql_type.resolver
+                    func_parameter.python_type = graphql_type.python_type
                 if not func_parameter.name:
                     func_parameter.set_name(param_name)
                 graphql_query.add_parameter(func_parameter)
-
+            elif isinstance(definition.default, InjectableFunction):
+                graphql_query.add_injected_parameter(
+                    name=param_name,
+                    injectable=self.dependency_injection_factory(definition.default),
+                )
         self.add_graphql_metadata(func=func, graphql_function=graphql_query)
 
         return graphql_query
+
+    def dependency_injection_factory(
+        self, injectable_function: InjectableFunction
+    ) -> InjectableFunction:
+        assert injectable_function.callable
+        func_signature = inspect.signature(injectable_function.callable)
+
+        for param_name, definition in func_signature.parameters.items():
+            if isinstance(definition.default, InjectableFunction):
+                injectable_function.dependencies[
+                    param_name
+                ] = self.dependency_injection_factory(definition.default)
+
+        return injectable_function
 
     def add_graphql_metadata(
         self, func: Callable[..., T_ANY], graphql_function: GraphQLFunction

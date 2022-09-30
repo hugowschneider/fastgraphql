@@ -13,10 +13,10 @@ from typing import (
 
 from fastgraphql.exceptions import GraphQLSchemaException
 from fastgraphql.scalars import GraphQLScalar
-from fastgraphql.types import GraphQLTypeEngine, GraphQLType, GraphQLFunction
+from fastgraphql.types import GraphQLType, GraphQLFunction
 
 
-class GraphQLSchema(GraphQLTypeEngine):
+class GraphQLSchema:
     def __init__(self) -> None:
         self.types: Dict[str, GraphQLType] = {}
         self.scalars: Dict[str, GraphQLScalar] = {}

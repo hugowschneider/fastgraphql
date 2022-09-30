@@ -1,32 +1,21 @@
-from typing import Type, Optional, List, Callable, TypeVar, Any
+from typing import Any, Callable, List, Optional, Type, TypeVar, Dict
 
 from pydantic import BaseModel
+from fastgraphql.injection import Injectable, InjectableRequestType
 
 T_ANY = TypeVar("T_ANY")
 T = TypeVar("T", bound=BaseModel)
 
 
-class InjectedFunctionParameter:
-    def __init__(self, name: Optional[str] = None):
-        self.resolver: Optional[Callable[..., Any]] = None
+class GraphQLDataType:
+    def __init__(self, name: str, python_type: Optional[Type[Any]]):
         self.name = name
-
-    def resolve(self, input: Any) -> Any:
-        if r := self.resolver:
-            return r(input)
-        return input
-
-
-class GraphQLTypeEngine:
-    def render(self) -> str:
-        raise NotImplementedError  # pragma: no cover
-
-
-class GraphQLDataType(GraphQLTypeEngine):
-    def __init__(self) -> None:
-        super().__init__()
+        self.python_type = python_type
 
     def ref(self, nullable: bool = False) -> "GraphQLReference":
+        raise NotImplementedError  # pragma: no cover
+
+    def render(self) -> str:
         raise NotImplementedError  # pragma: no cover
 
 
@@ -39,14 +28,16 @@ class GraphQLTypeAttribute:
         return f"{self.name}: {self.attr_type.render()}"
 
 
-class GraphQLReference(GraphQLDataType):
-    def __init__(self, reference: str, nullable: bool = False) -> None:
-        super().__init__()
-        self.reference = reference
+class GraphQLReference:
+    def __init__(
+        self, referenced_type: GraphQLDataType, nullable: bool = False
+    ) -> None:
+        self.python_type = referenced_type.python_type
+        self.referenced_type = referenced_type
         self.nullable = nullable
 
     def render(self) -> str:
-        return f"{self.reference}{'' if self.nullable else '!'}"
+        return f"{self.referenced_type.name}{'' if self.nullable else '!'}"
 
 
 class GraphQLType(GraphQLDataType):
@@ -57,19 +48,17 @@ class GraphQLType(GraphQLDataType):
         attrs: Optional[List[GraphQLTypeAttribute]] = None,
         as_input: bool = False,
     ):
-        super().__init__()
-        self.name = name
+        super().__init__(name=name, python_type=python_type)
         if not attrs:
             attrs = []
         self.attrs = attrs
         self.as_input = as_input
-        self.resolver = lambda attrs: python_type(**attrs)
 
     def add_attribute(self, field: GraphQLTypeAttribute) -> None:
         self.attrs.append(field)
 
     def ref(self, nullable: bool = False) -> GraphQLReference:
-        return GraphQLReference(self.name, nullable=nullable)
+        return GraphQLReference(self, nullable=nullable)
 
     def render(self) -> str:
         separator = "\n    "
@@ -82,23 +71,24 @@ class GraphQLType(GraphQLDataType):
 
 
 class GraphQLArray(GraphQLDataType):
-    def __init__(self, item_type: GraphQLDataType):
-        super().__init__()
+    def __init__(self, item_type: GraphQLReference):
+        super().__init__(python_type=list, name=f"[{item_type.render()}]")
+
         self.item_type = item_type
 
-    def render(self) -> str:
-        return f"[{self.item_type.render()}]"
-
     def ref(self, nullable: bool = False) -> GraphQLReference:
-        return GraphQLReference(reference=self.render(), nullable=nullable)
+        return GraphQLReference(referenced_type=self, nullable=nullable)
 
 
-class GraphQLFunctionField(GraphQLTypeEngine, InjectedFunctionParameter):
+class GraphQLFunctionField(InjectableRequestType):
     def __init__(
-        self, graphql_type: Optional[GraphQLDataType] = None, name: Optional[str] = None
+        self,
+        graphql_type: Optional[GraphQLReference] = None,
+        name: Optional[str] = None,
     ):
-        super().__init__(name=name)
-        self.type = graphql_type
+        super().__init__(python_type=graphql_type.python_type if graphql_type else None)
+        self.name = name
+        self.reference = graphql_type
         self.python_name: str = ""
 
     def set_name(self, name: str) -> None:
@@ -108,32 +98,32 @@ class GraphQLFunctionField(GraphQLTypeEngine, InjectedFunctionParameter):
         self.python_name = python_name
 
     def render(self) -> str:
-        assert self.type
-        return f"{self.name}: {self.type.render()}"
+        assert self.reference
+        return f"{self.name}: {self.reference.render()}"
 
 
 class GraphQLQueryField(GraphQLFunctionField):
     ...
 
 
-class GraphQLFunction(GraphQLTypeEngine):
+class GraphQLFunction:
     def __init__(
         self,
         name: str,
-        return_type: GraphQLDataType,
+        return_type: GraphQLReference,
         parameters: Optional[List[GraphQLFunctionField]] = None,
     ):
         self.name = name
         self.return_type = return_type
         self.parameters: List[GraphQLFunctionField] = parameters if parameters else []
         self.resolver: Optional[Callable[..., T_ANY]] = None
-        self.injected_parameters: List[InjectedFunctionParameter] = []
+        self.injected_parameters: Dict[str, Injectable] = {}
 
     def add_parameter(self, parameter: GraphQLFunctionField) -> None:
         self.parameters.append(parameter)
 
-    def add_injected_parameter(self, parameter: InjectedFunctionParameter) -> None:
-        self.injected_parameters.append(parameter)
+    def add_injected_parameter(self, name: str, injectable: Injectable) -> None:
+        self.injected_parameters[name] = injectable
 
     def render(self) -> str:
         parameters = ", ".join([p.render() for p in self.parameters])

@@ -148,7 +148,7 @@ class TestFactoryTypeParsing:
         assert isinstance(graphql_type, GraphQLArray)
         assert isinstance(graphql_type.item_type, GraphQLReference)
         assert graphql_type.item_type.nullable is False
-        assert graphql_type.item_type.reference == "Boolean"
+        assert graphql_type.item_type.referenced_type.name == "Boolean"
 
     def test_array_non_nullable_nullable_item(
         self, factory: GraphQLTypeFactory
@@ -161,7 +161,7 @@ class TestFactoryTypeParsing:
         assert isinstance(graphql_type, GraphQLArray)
         assert isinstance(graphql_type.item_type, GraphQLReference)
         assert graphql_type.item_type.nullable
-        assert graphql_type.item_type.reference == "Boolean"
+        assert graphql_type.item_type.referenced_type.name == "Boolean"
 
     def test_array_nullable_non_nullable_item(
         self, factory: GraphQLTypeFactory
@@ -176,7 +176,7 @@ class TestFactoryTypeParsing:
         assert isinstance(graphql_type, GraphQLArray)
         assert isinstance(graphql_type.item_type, GraphQLReference)
         assert graphql_type.item_type.nullable is False
-        assert graphql_type.item_type.reference == "Boolean"
+        assert graphql_type.item_type.referenced_type.name == "Boolean"
 
     def test_model_type(self, factory: GraphQLTypeFactory) -> None:
         class Model(BaseModel):
@@ -212,7 +212,7 @@ class TestFactoryTypeParsing:
         assert isinstance(graphql_type, GraphQLArray)
         assert isinstance(graphql_type.item_type, GraphQLReference)
         assert graphql_type.item_type.nullable is False
-        assert graphql_type.item_type.reference == "Model"
+        assert graphql_type.item_type.referenced_type.name == "Model"
 
     def test_model_array_non_nullable_nullable_item(
         self, factory: GraphQLTypeFactory
@@ -230,7 +230,7 @@ class TestFactoryTypeParsing:
         assert isinstance(graphql_type, GraphQLArray)
         assert isinstance(graphql_type.item_type, GraphQLReference)
         assert graphql_type.item_type.nullable
-        assert graphql_type.item_type.reference == "Model"
+        assert graphql_type.item_type.referenced_type.name == "Model"
 
     def test_model_array_nullable_non_nullable_item(
         self, factory: GraphQLTypeFactory
@@ -248,7 +248,7 @@ class TestFactoryTypeParsing:
         assert isinstance(graphql_type, GraphQLArray)
         assert isinstance(graphql_type.item_type, GraphQLReference)
         assert graphql_type.item_type.nullable is False
-        assert graphql_type.item_type.reference == "Model"
+        assert graphql_type.item_type.referenced_type.name == "Model"
 
     def test_unsupported_type(self, factory: GraphQLTypeFactory) -> None:
         class Model:

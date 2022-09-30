@@ -24,7 +24,7 @@ def make_executable_schema(fast_graqhql: FastGraphQL) -> GraphQLSchema:
     bindables: List[SchemaBindable] = []
     if len(fast_graqhql.schema.scalars):
         for name, scalar in fast_graqhql.schema.scalars.items():
-            if not scalar._default_scalar and (scalar.decoder or scalar.encoder):
+            if not scalar.default_scalar and (scalar.decoder or scalar.encoder):
                 bindables.append(
                     ScalarType(
                         scalar.name,

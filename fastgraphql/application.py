@@ -1,4 +1,5 @@
 import functools
+import inspect
 import logging
 
 from fastgraphql.factory import GraphQLTypeFactory, GraphQLFunctionFactory, _DateFormats
@@ -15,6 +16,7 @@ from typing import (
 )
 from pydantic import BaseModel
 
+from fastgraphql.injection import InjectableFunction
 from fastgraphql.schema import GraphQLSchema
 from fastgraphql.types import GraphQLType, GraphQLQueryField, GraphQLFunction
 from fastgraphql.scalars import GraphQLScalar
@@ -166,8 +168,15 @@ class FastGraphQL:
                     assert name
                     value = kwargs[name]
                     resolved_kwargs[python_name] = (
-                        parameter.resolve(value) if value is not None else None
+                        parameter(**value) if parameter.is_callable() else value
                     )
+
+                for name, injectable in graphql_type.injected_parameters.items():
+                    value = injectable()
+                    if inspect.isgenerator(value):
+                        resolved_kwargs[name] = next(value)
+                    else:
+                        resolved_kwargs[name] = value
 
                 return func(**resolved_kwargs)
 
@@ -180,4 +189,13 @@ class FastGraphQL:
     def graphql_query_field(
         self, name: Optional[str] = None, graphql_scalar: Optional[GraphQLScalar] = None
     ) -> Any:
-        return GraphQLQueryField(name=name, graphql_type=graphql_scalar)
+        if g := graphql_scalar:
+            if not g.default_scalar:
+                self.schema.add_scalar(graphql_scalar)
+
+            return GraphQLQueryField(name=name, graphql_type=graphql_scalar.ref())
+
+        return GraphQLQueryField(name=name)
+
+    def depends(self, dependency_provider: Callable[..., Any]) -> Any:
+        return InjectableFunction(dependency_provider)
