@@ -1,11 +1,21 @@
-from pydantic import BaseModel# FastGraphQL
+# FastGraphQL
 FastGraphQL is intended to help developer create code driven GraphQL APIs.
 
-[![codecov](https://codecov.io/gh/hugowschneider/fastgraphql/branch/main/graph/badge.svg?token=FCC5LMA0IQ)](https://codecov.io/gh/hugowschneider/fastgraphql)
-![tests](https://github.com/hugowschneider/fastgraphql/actions/workflows/test.yaml/badge.svg)
 ![pypi](https://img.shields.io/pypi/v/fastgraphql)
 ![Python Versions](https://img.shields.io/pypi/pyversions/fastgraphql.svg?color=%2334D058)
 ![License](https://img.shields.io/pypi/l/fastgraphql)
+
+[![codecov](https://codecov.io/gh/hugowschneider/fastgraphql/branch/main/graph/badge.svg?token=FCC5LMA0IQ)](https://codecov.io/gh/hugowschneider/fastgraphql)
+![tests](https://github.com/hugowschneider/fastgraphql/actions/workflows/test.yaml/badge.svg)
+
+
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=hugowschneider_fastgraphql&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=hugowschneider_fastgraphql)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=hugowschneider_fastgraphql&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=hugowschneider_fastgraphql)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=hugowschneider_fastgraphql&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=hugowschneider_fastgraphql)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=hugowschneider_fastgraphql&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=hugowschneider_fastgraphql)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=hugowschneider_fastgraphql&metric=bugs)](https://sonarcloud.io/summary/new_code?id=hugowschneider_fastgraphql)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=hugowschneider_fastgraphql&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=hugowschneider_fastgraphql)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=hugowschneider_fastgraphql&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=hugowschneider_fastgraphql)
 
 # Disclaimer
 
@@ -68,7 +78,7 @@ print(fast_graphql.render())
 The above code example generates a schema as follows:
 
 ```graphql
-scalar Date
+scalar DateTime
 
 type Model {
     t_int: Int!
@@ -77,8 +87,8 @@ type Model {
     t_opt_str: String
     t_float: Float!
     t_opt_float: Float
-    t_datatime: Date!
-    t_opt_datatime: Date
+    t_datatime: DateTime!
+    t_opt_datatime: DateTime
     t_boolean: Boolean!
     t_opt_boolean: Boolean
 }
@@ -127,3 +137,38 @@ type Query {
     my_first_query(model: Model!, param: String!): String!
 }
 ```
+
+# Dependecy Injection
+Query and Mutation can have dependencies injected using `FastGraphQL.depende(...)` as showed bellow:`
+```python
+from fastgraphql import FastGraphQL
+from pydantic import BaseModel
+fast_graphql = FastGraphQL()
+
+class Model(BaseModel):
+    param: str
+
+def create_dependency() -> str:
+    return ""
+    
+@fast_graphql.graphql_query()
+def my_first_query(
+        model: Model = fast_graphql.graphql_query_field(),
+        dependecy: str = fast_graphql.depends(create_dependency)
+) -> str:
+    ...
+
+```
+In this example the parameter `dependecy` will be injected once the query is called. 
+
+# Integrations
+
+## Ariadne
+...
+
+## FastAPI
+...
+
+# Acknowledgment
+
+Thanks [FastAPI](https://fastapi.tiangolo.com) for inpirations

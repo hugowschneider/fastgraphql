@@ -2,7 +2,7 @@ import pytest
 from pydantic import BaseModel, Field
 
 from fastgraphql import FastGraphQL
-from fastgraphql.schema import GraphQLScalar
+from fastgraphql.scalars import GraphQLScalar
 from fastgraphql.exceptions import GraphQLSchemaException
 
 
@@ -48,3 +48,35 @@ class TestNameConflict:
             @fast_graphql.graphql_type()
             class Model1(BaseModel):
                 t_int: str = Field(..., graphql_scalar=GraphQLScalar("Model1"))
+
+    def test_name_conflict(self) -> None:
+        fast_graphql = FastGraphQL()
+        with pytest.raises(GraphQLSchemaException):
+
+            @fast_graphql.graphql_query()
+            def sample_query1() -> bool:
+                return False  # pragma: no cover
+
+            @fast_graphql.graphql_query(name="sample_query1")
+            def sample_query2() -> bool:
+                return False  # pragma: no cover
+
+        with pytest.raises(GraphQLSchemaException):
+
+            @fast_graphql.graphql_query()
+            def sample_query3() -> bool:
+                return False  # pragma: no cover
+
+            @fast_graphql.graphql_mutation(name="sample_query3")
+            def sample_query4() -> bool:
+                return False  # pragma: no cover
+
+        with pytest.raises(GraphQLSchemaException):
+
+            @fast_graphql.graphql_mutation()
+            def sample_query5() -> bool:
+                return False  # pragma: no cover
+
+            @fast_graphql.graphql_query(name="sample_query5")
+            def sample_query6() -> bool:
+                return False  # pragma: no cover

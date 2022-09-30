@@ -4,7 +4,8 @@ from typing import Optional
 from pydantic import BaseModel
 
 from fastgraphql import FastGraphQL
-from fastgraphql.schema import SelfGraphQL, GraphQLScalar
+from fastgraphql.schema import SelfGraphQL
+from fastgraphql.scalars import GraphQLScalar
 
 
 class TestQueryRendering:
@@ -16,7 +17,7 @@ class TestQueryRendering:
             return ""  # pragma: no cover
 
         expected_query_definition = """
-sample_mutation(): String!""".strip()
+sample_mutation: String!""".strip()
 
         expected_graphql_definition = f"""
 type Mutation {{
@@ -37,7 +38,7 @@ type Mutation {{
             return ""  # pragma: no cover
 
         expected_query_definition = """
-q1(): String!        
+q1: String!        
         """.strip()
 
         expected_graphql_definition = f"""
@@ -70,10 +71,12 @@ type Mutation {{
             return ""  # pragma: no cover
 
         expected_query_definition = """
-sample_mutation(t_int: Int!, t_opt_int: Int, t_str: String!, t_opt_str: String, t_float: Float!, t_opt_float: Float, t_datatime: Date!, t_opt_datatime: Date, t_boolean: Boolean!, t_opt_boolean: Boolean): String!        
+sample_mutation(t_int: Int!, t_opt_int: Int, t_str: String!, t_opt_str: String, t_float: Float!, t_opt_float: Float, t_datatime: DateTime!, t_opt_datatime: DateTime, t_boolean: Boolean!, t_opt_boolean: Boolean): String!        
         """.strip()
 
         expected_graphql_definition = f"""
+scalar DateTime
+
 type Mutation {{
     {expected_query_definition}
 }}""".strip()
@@ -179,7 +182,7 @@ type Mutation {{
             return Model()  # pragma: no cover
 
         expected_query_definition = """
-sample_mutation(): Model!        
+sample_mutation: Model!        
         """.strip()
 
         expected_graphql_definition = f"""

@@ -1,5 +1,5 @@
 import inspect
-from datetime import date
+from datetime import date, datetime, time
 from typing import (
     Iterable,
     List,
@@ -12,32 +12,51 @@ from typing import (
     get_args,
     cast,
     Callable,
+    Any,
 )
 
 from pydantic.fields import ModelField
 from pydantic import BaseModel
 
-from fastgraphql.exceptions import GraphQLResolverException
+from fastgraphql.exceptions import GraphQLFactoryException
+from fastgraphql.injection import InjectableFunction
 from fastgraphql.schema import (
-    GraphQLDataType,
-    GraphQLArray,
-    GraphQLString,
-    GraphQLBoolean,
-    GraphQLInteger,
-    GraphQLFloat,
-    GraphQLScalar,
-    GraphQLType,
-    GraphQLTypeAttribute,
     GraphQLSchema,
     SelfGraphQL,
-    GraphQLFunction,
-    GraphQLFunctionField,
     SelfGraphQLType,
     SelfGraphQLFunction,
 )
+from fastgraphql.types import (
+    GraphQLDataType,
+    GraphQLTypeAttribute,
+    GraphQLType,
+    GraphQLArray,
+    GraphQLFunctionField,
+    GraphQLFunction,
+)
+from fastgraphql.scalars import (
+    GraphQLScalar,
+    GraphQLBoolean,
+    GraphQLInteger,
+    GraphQLString,
+    GraphQLFloat,
+    GraphQLDateTime,
+    GraphQLDate,
+    GraphQLTime,
+)
+from fastgraphql.utils import MutableString
 
 T = TypeVar("T", bound=BaseModel)
 T_ANY = TypeVar("T_ANY")
+
+
+class _DateFormats:
+    def __init__(
+        self, date_format: str, time_format: str, date_time_format: str
+    ) -> None:
+        self.date_format = MutableString(date_format)
+        self.time_format = MutableString(time_format)
+        self.date_time_format = MutableString(date_time_format)
 
 
 class GraphQLTypeFactory:
@@ -46,53 +65,67 @@ class GraphQLTypeFactory:
     schemas and input types.
     """
 
-    def __init__(self, schema: GraphQLSchema, input_factory: bool = False) -> None:
+    def __init__(
+        self,
+        schema: GraphQLSchema,
+        date_formats: _DateFormats,
+        input_factory: bool = False,
+    ) -> None:
         self.schema = schema
         self.input_factory = input_factory
+        self.date_formats = date_formats
 
     def create_graphql_type(
         self,
-        type_: Type[T],
+        python_type: Type[Any],
         exclude_model_attrs: Optional[List[str]] = None,
         name: Optional[str] = None,
     ) -> Tuple[GraphQLDataType, bool]:
 
-        if get_origin(type_):
-            if get_origin(type_) == Union and Optional[get_args(type_)[0]] == type_:
-                inner_type, _ = self.create_graphql_type(get_args(type_)[0])
+        if get_origin(python_type):
+            if (
+                get_origin(python_type) == Union
+                and Optional[get_args(python_type)[0]] == python_type
+            ):
+                inner_type, _ = self.create_graphql_type(get_args(python_type)[0])
                 return inner_type, True
-            if issubclass(cast(type, get_origin(type_)), Iterable):
-                inner_type, nullable = self.create_graphql_type(get_args(type_)[0])
+            if issubclass(cast(type, get_origin(python_type)), Iterable):
+                inner_type, nullable = self.create_graphql_type(
+                    get_args(python_type)[0]
+                )
                 return GraphQLArray(inner_type.ref(nullable=nullable)), False
 
-        if issubclass(type_, BaseModel):
+        if issubclass(python_type, BaseModel):
             return (
                 self.adapt_pydantic_graphql(
-                    type_=type_,
+                    python_type=python_type,
                     name=name,
                     exclude_model_attrs=exclude_model_attrs,
                 ),
                 False,
             )
-        if issubclass(type_, str):
+        if issubclass(python_type, str):
             return GraphQLString(), False
-        if issubclass(type_, bool):
+        if issubclass(python_type, bool):
             return GraphQLBoolean(), False
-        if issubclass(type_, int):
+        if issubclass(python_type, int):
             return GraphQLInteger(), False
-        if issubclass(type_, float):
+        if issubclass(python_type, float):
             return GraphQLFloat(), False
-        if issubclass(type_, date):
-            scalar = GraphQLScalar("Date")
-            return scalar, False
+        if issubclass(python_type, datetime):
+            return GraphQLDateTime(self.date_formats.date_time_format), False
+        if issubclass(python_type, time):
+            return GraphQLTime(self.date_formats.time_format), False
+        if issubclass(python_type, date):
+            return GraphQLDate(self.date_formats.date_format), False
 
-        raise RuntimeError(  # pragma: no cover
-            f"Type {type_.__class__.__name__} is still not implement but pydantic should have caught this error"
+        raise GraphQLFactoryException(
+            f"Type {python_type.__class__.__name__} is still not implement but pydantic should have caught this error"
         )
 
     def adapt_pydantic_graphql(
         self,
-        type_: Type[T],
+        python_type: Type[T],
         name: Optional[str] = None,
         exclude_model_attrs: Optional[List[str]] = None,
     ) -> GraphQLDataType:
@@ -101,17 +134,19 @@ class GraphQLTypeFactory:
             exclude_model_attrs = []
 
         if not name:
-            name = str(type_.__name__)
+            name = str(python_type.__name__)
 
-        if i := SelfGraphQL.introspect(type_):
+        if i := SelfGraphQL.introspect(python_type):
             if self.input_factory and (graphql_type := i.as_input):
                 return graphql_type
             elif not self.input_factory and (graphql_type := i.as_type):
                 return graphql_type
 
         field: ModelField
-        graphql_type = GraphQLType(name=name, as_input=self.input_factory)
-        for _, field in type_.__fields__.items():
+        graphql_type = GraphQLType(
+            name=name, as_input=self.input_factory, python_type=python_type
+        )
+        for _, field in python_type.__fields__.items():
             if field.name in exclude_model_attrs:
                 continue
             if "graphql_scalar" in field.field_info.extra:
@@ -124,7 +159,7 @@ class GraphQLTypeFactory:
 
             if (
                 isinstance(graphql_attr_type, GraphQLScalar)
-                and not graphql_attr_type._default_scalar
+                and not graphql_attr_type.default_scalar
             ):
                 self.schema.add_scalar(graphql_attr_type)
 
@@ -137,7 +172,7 @@ class GraphQLTypeFactory:
                 )
             )
 
-        self.add_graphql_metadata(type_, graphql_type)
+        self.add_graphql_metadata(python_type, graphql_type)
         if self.input_factory:
             self.schema.add_input_type(graphql_type=graphql_type)
         else:
@@ -177,7 +212,7 @@ class GraphQLFunctionFactory:
         func_signature = inspect.signature(func)
 
         if func_signature.return_annotation == inspect.Parameter.empty:
-            raise GraphQLResolverException(
+            raise GraphQLFactoryException(
                 f"{'Mutation' if self.mutation_factory else 'Query'} {name} implemented in {func.__qualname__} does not have a return type annotation"
             )
 
@@ -192,29 +227,51 @@ class GraphQLFunctionFactory:
         for param_name, definition in func_signature.parameters.items():
             if isinstance(definition.default, GraphQLFunctionField):
                 func_parameter: GraphQLFunctionField = definition.default
+                func_parameter.set_python_name(param_name)
+
                 if definition.annotation == inspect.Parameter.empty:
-                    raise Exception(
+                    raise GraphQLFactoryException(
                         f"Method {func.__qualname__} defines a {GraphQLFunctionField.__name__} without type definition."
                     )
                 graphql_type, nullable = self.input_factory.create_graphql_type(
                     definition.annotation
                 )
-                if func_parameter.type:
-                    if (
-                        isinstance(func_parameter.type, GraphQLScalar)
-                        and not func_parameter.type._default_scalar
-                    ):
-                        self.schema.add_scalar(func_parameter.type)
-                    graphql_type = func_parameter.type
+                if func_parameter.reference:
+                    graphql_type = func_parameter.reference.referenced_type
+                if (
+                    isinstance(graphql_type, GraphQLScalar)
+                    and not graphql_type.default_scalar
+                ):
+                    self.schema.add_scalar(graphql_type)
 
-                func_parameter.set_type(graphql_type.ref(nullable=nullable))
+                func_parameter.reference = graphql_type.ref(nullable=nullable)
+                if isinstance(graphql_type, GraphQLType):
+                    func_parameter.python_type = graphql_type.python_type
                 if not func_parameter.name:
                     func_parameter.set_name(param_name)
                 graphql_query.add_parameter(func_parameter)
-
+            elif isinstance(definition.default, InjectableFunction):
+                graphql_query.add_injected_parameter(
+                    name=param_name,
+                    injectable=self.dependency_injection_factory(definition.default),
+                )
         self.add_graphql_metadata(func=func, graphql_function=graphql_query)
 
         return graphql_query
+
+    def dependency_injection_factory(
+        self, injectable_function: InjectableFunction
+    ) -> InjectableFunction:
+        assert injectable_function.callable
+        func_signature = inspect.signature(injectable_function.callable)
+
+        for param_name, definition in func_signature.parameters.items():
+            if isinstance(definition.default, InjectableFunction):
+                injectable_function.dependencies[
+                    param_name
+                ] = self.dependency_injection_factory(definition.default)
+
+        return injectable_function
 
     def add_graphql_metadata(
         self, func: Callable[..., T_ANY], graphql_function: GraphQLFunction

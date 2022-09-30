@@ -4,7 +4,8 @@ from typing import Optional, List
 from pydantic import BaseModel, Field
 
 from fastgraphql import FastGraphQL
-from fastgraphql.schema import GraphQLID, SelfGraphQL
+from fastgraphql.schema import SelfGraphQL
+from fastgraphql.scalars import GraphQLID
 
 
 class TestPydanticInputRendering:
@@ -25,7 +26,7 @@ class TestPydanticInputRendering:
             t_opt_boolean: Optional[bool]
 
         expected_scalar_def = """
-scalar Date
+scalar DateTime
         """.strip()
 
         expected_graphql_def = """
@@ -36,8 +37,8 @@ input TypeWithoutReferences {
     t_opt_str: String
     t_float: Float!
     t_opt_float: Float
-    t_datatime: Date!
-    t_opt_datatime: Date
+    t_datatime: DateTime!
+    t_opt_datatime: DateTime
     t_boolean: Boolean!
     t_opt_boolean: Boolean
 } 
@@ -69,7 +70,7 @@ input TypeWithoutReferences {
             t_opt_datatime: Optional[datetime]
 
         expected_scalar_def = """
-    scalar Date
+    scalar DateTime
             """.strip()
 
         expected_graphql_def = """
@@ -80,8 +81,8 @@ input Type1 {
     t_opt_str: String
     t_float: Float!
     t_opt_float: Float
-    t_datatime: Date!
-    t_opt_datatime: Date
+    t_datatime: DateTime!
+    t_opt_datatime: DateTime
 } 
             """.strip()
 
@@ -111,7 +112,7 @@ input Type1 {
             t_type_with_references: TypeWithoutReferences
 
         expected_scalar_def = """
-scalar Date
+scalar DateTime
         """.strip()
 
         expected_graphql_def = """
@@ -154,7 +155,7 @@ input TypeWithReference {
             t_type_with_references: TypeWithoutReferences
 
         expected_scalar_def = """
-scalar Date
+scalar DateTime
         """.strip()
 
         expected_graphql_def = """
@@ -196,7 +197,7 @@ input Type2 {
             t_opt_datatime: Optional[datetime]
 
         expected_scalar_def = """
-scalar Date
+scalar DateTime
         """.strip()
 
         expected_graphql_def = """
@@ -205,8 +206,8 @@ input TypeWithoutReferences {
     t_opt_str: String
     t_float: Float!
     t_opt_float: Float
-    t_datatime: Date!
-    t_opt_datatime: Date
+    t_datatime: DateTime!
+    t_opt_datatime: DateTime
 } 
         """.strip()
         self_graphql = SelfGraphQL.introspect(TypeWithoutReferences)
@@ -242,15 +243,15 @@ input ModelWithGenericTypes {
     t_ints: [Int!]!
     t_str: [String!]!
     t_float: [Float!]!
-    t_dates: [Date!]!
+    t_dates: [DateTime!]!
     t_opt_ints: [Int!]
     t_opt_str: [String!]
     t_opt_float: [Float!]
-    t_opt_dates: [Date!]
+    t_opt_dates: [DateTime!]
     t_ints_opt: [Int]!
     t_str_opt: [String]!
     t_float_opt: [Float]!
-    t_dates_opt: [Date]!
+    t_dates_opt: [DateTime]!
 }
     """.strip()
         self_graphql = SelfGraphQL.introspect(ModelWithGenericTypes)

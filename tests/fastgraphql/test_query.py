@@ -1,12 +1,11 @@
 from datetime import datetime
 from typing import Optional
 
-import pytest
 from pydantic import BaseModel
 
 from fastgraphql import FastGraphQL
-from fastgraphql.exceptions import GraphQLSchemaException
-from fastgraphql.schema import SelfGraphQL, GraphQLScalar
+from fastgraphql.schema import SelfGraphQL
+from fastgraphql.scalars import GraphQLScalar
 
 
 class TestQueryRendering:
@@ -18,7 +17,7 @@ class TestQueryRendering:
             return ""  # pragma: no cover
 
         expected_query_definition = """
-sample_query(): String!        
+sample_query: String!        
         """.strip()
 
         expected_graphql_definition = f"""
@@ -40,7 +39,7 @@ type Query {{
             return ""  # pragma: no cover
 
         expected_query_definition = """
-q1(): String!        
+q1: String!        
         """.strip()
 
         expected_graphql_definition = f"""
@@ -73,10 +72,12 @@ type Query {{
             return ""  # pragma: no cover
 
         expected_query_definition = """
-sample_query(t_int: Int!, t_opt_int: Int, t_str: String!, t_opt_str: String, t_float: Float!, t_opt_float: Float, t_datatime: Date!, t_opt_datatime: Date, t_boolean: Boolean!, t_opt_boolean: Boolean): String!        
+sample_query(t_int: Int!, t_opt_int: Int, t_str: String!, t_opt_str: String, t_float: Float!, t_opt_float: Float, t_datatime: DateTime!, t_opt_datatime: DateTime, t_boolean: Boolean!, t_opt_boolean: Boolean): String!        
         """.strip()
 
         expected_graphql_definition = f"""
+scalar DateTime
+
 type Query {{
     {expected_query_definition}
 }}""".strip()
@@ -182,7 +183,7 @@ type Query {{
             return Model()  # pragma: no cover
 
         expected_query_definition = """
-sample_query(): Model!        
+sample_query: Model!        
         """.strip()
 
         expected_graphql_definition = f"""
@@ -199,25 +200,3 @@ type Query {{
         assert self_graphql.as_query
         assert self_graphql.as_query.render() == expected_query_definition
         assert fast_graphql.render() == expected_graphql_definition
-
-    def test_name_conflict(self) -> None:
-        fast_graphql = FastGraphQL()
-        with pytest.raises(GraphQLSchemaException):
-
-            @fast_graphql.graphql_query()
-            def sample_query1() -> bool:
-                return False  # pragma: no cover
-
-            @fast_graphql.graphql_query(name="sample_query1")
-            def sample_query2() -> bool:
-                return False  # pragma: no cover
-
-        with pytest.raises(GraphQLSchemaException):
-
-            @fast_graphql.graphql_query()
-            def sample_query3() -> bool:
-                return False  # pragma: no cover
-
-            @fast_graphql.graphql_mutation(name="sample_query3")
-            def sample_query4() -> bool:
-                return False  # pragma: no cover

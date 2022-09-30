@@ -2,7 +2,6 @@ from typing import (
     Any,
     Dict,
     Iterable,
-    List,
     Optional,
     Type,
     cast,
@@ -11,161 +10,13 @@ from typing import (
     overload,
 )
 
+
 from fastgraphql.exceptions import GraphQLSchemaException
+from fastgraphql.scalars import GraphQLScalar
+from fastgraphql.types import GraphQLType, GraphQLFunction
 
 
-class GraphQLTypeEngine:
-    def render(self) -> str:
-        raise NotImplementedError  # pragma: no cover
-
-
-class GraphQLDataType(GraphQLTypeEngine):
-    def ref(self, nullable: bool = False) -> "GraphQLReference":
-        raise NotImplementedError  # pragma: no cover
-
-
-class GraphQLTypeAttribute:
-    def __init__(self, name: str, attr_type: GraphQLDataType):
-        self.name = name
-        self.attr_type = attr_type
-
-    def render(self) -> str:
-        return f"{self.name}: {self.attr_type.render()}"
-
-
-class GraphQLReference(GraphQLDataType):
-    def __init__(self, reference: str, nullable: bool = False):
-        self.reference = reference
-        self.nullable = nullable
-
-    def render(self) -> str:
-        return f"{self.reference}{'' if self.nullable else '!'}"
-
-
-class GraphQLType(GraphQLDataType):
-    def __init__(
-        self,
-        name: str,
-        attrs: Optional[List[GraphQLTypeAttribute]] = None,
-        as_input: bool = False,
-    ):
-        self.name = name
-        if not attrs:
-            attrs = []
-        self.attrs = attrs
-        self.as_input = as_input
-
-    def add_attribute(self, field: GraphQLTypeAttribute) -> None:
-        self.attrs.append(field)
-
-    def ref(self, nullable: bool = False) -> GraphQLReference:
-        return GraphQLReference(self.name, nullable=nullable)
-
-    def render(self) -> str:
-        separator = "\n    "
-        decl = "input" if self.as_input else "type"
-        return f"""
-{decl} {self.name} {{
-    {separator.join([attr.render() for attr in self.attrs])}
-}}
-        """.strip()
-
-
-class GraphQLScalar(GraphQLDataType):
-    def __init__(self, name: str):
-        self.name = name
-        self._default_scalar = False
-
-    def render(self) -> str:
-        return f"scalar {self.name}"
-
-    def ref(self, nullable: bool = False) -> GraphQLReference:
-        return GraphQLReference(self.name, nullable=nullable)
-
-
-class GraphQLArray(GraphQLDataType):
-    def __init__(self, item_type: GraphQLDataType):
-        self.item_type = item_type
-
-    def render(self) -> str:
-        return f"[{self.item_type.render()}]"
-
-    def ref(self, nullable: bool = False) -> GraphQLReference:
-        return GraphQLReference(reference=self.render(), nullable=nullable)
-
-
-class GraphQLBoolean(GraphQLScalar):
-    def __init__(self) -> None:
-        super().__init__("Boolean")
-        self._default_scalar = True
-
-
-class GraphQLInteger(GraphQLScalar):
-    def __init__(self) -> None:
-        super().__init__("Int")
-        self._default_scalar = True
-
-
-class GraphQLString(GraphQLScalar):
-    def __init__(self) -> None:
-        super().__init__("String")
-        self._default_scalar = True
-
-
-class GraphQLFloat(GraphQLScalar):
-    def __init__(self) -> None:
-        super().__init__("Float")
-        self._default_scalar = True
-
-
-class GraphQLID(GraphQLScalar):
-    def __init__(self) -> None:
-        super().__init__("ID")
-        self._default_scalar = True
-
-
-class GraphQLFunctionField(GraphQLTypeEngine):
-    def __init__(
-        self, name: Optional[str] = None, type_: Optional[GraphQLDataType] = None
-    ):
-        self.name = name
-        self.type = type_
-
-    def set_type(self, type_: GraphQLDataType) -> None:
-        self.type = type_
-
-    def set_name(self, name: str) -> None:
-        self.name = name
-
-    def render(self) -> str:
-        assert self.type
-        return f"{self.name}: {self.type.render()}"
-
-
-class GraphQLQueryField(GraphQLFunctionField):
-    ...
-
-
-class GraphQLFunction(GraphQLTypeEngine):
-    def __init__(
-        self,
-        name: str,
-        return_type: GraphQLDataType,
-        parameters: Optional[List[GraphQLFunctionField]] = None,
-    ):
-        self.name = name
-        self.return_type = return_type
-        self.parameters: List[GraphQLFunctionField] = parameters if parameters else []
-
-    def add_parameter(self, func_parameter: GraphQLFunctionField) -> None:
-        self.parameters.append(func_parameter)
-
-    def render(self) -> str:
-        parameters = ", ".join([p.render() for p in self.parameters])
-        return f"{self.name}({parameters}): {self.return_type.render()}"
-
-
-class GraphQLSchema(GraphQLTypeEngine):
+class GraphQLSchema:
     def __init__(self) -> None:
         self.types: Dict[str, GraphQLType] = {}
         self.scalars: Dict[str, GraphQLScalar] = {}
@@ -263,12 +114,14 @@ type {decl} {{
 class SelfGraphQL:
     @staticmethod
     @overload
-    def introspect(type_: Type[Any]) -> Optional["SelfGraphQLType"]:
+    def introspect(type_: Type[Any]) -> Optional["SelfGraphQLType"]:  # pragma: no cover
         ...
 
     @staticmethod
     @overload
-    def introspect(type_: Callable[..., Any]) -> Optional["SelfGraphQLFunction"]:
+    def introspect(
+        type_: Callable[..., Any]
+    ) -> Optional["SelfGraphQLFunction"]:  # pragma: no cover
         ...
 
     @staticmethod
