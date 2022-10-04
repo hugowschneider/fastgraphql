@@ -113,7 +113,8 @@ def adapt_relation(
         nullable = any(c.nullable for c in relation.local_columns)
         graphql_type.add_attribute(
             GraphQLTypeAttribute(
-                name=relation.key,
+                graphql_name=relation.key,
+                python_name=relation.key,
                 attr_type=adapt_sqlalchemy_graphql(
                     python_type=relation.mapper.entity,
                     schema=schema,
@@ -154,6 +155,7 @@ def adapt_column(
         schema.add_scalar(graphql_type)
 
     return GraphQLTypeAttribute(
-        name=column.name,
+        graphql_name=column.name,
+        python_name=column.name,
         attr_type=graphql_type.ref(nullable=column.nullable),
     )

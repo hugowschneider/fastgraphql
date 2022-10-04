@@ -17,6 +17,12 @@ class GraphQLDataType:
     def render(self) -> str:
         raise NotImplementedError  # pragma: no cover
 
+    def map_from_input(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
+        return kwargs
+
+    def map_to_output(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
+        return kwargs
+
 
 class GraphQLReference:
     def __init__(
@@ -31,12 +37,15 @@ class GraphQLReference:
 
 
 class GraphQLTypeAttribute:
-    def __init__(self, name: str, attr_type: GraphQLReference):
-        self.name = name
+    def __init__(
+        self, graphql_name: str, python_name: str, attr_type: GraphQLReference
+    ):
+        self.graphql_name = graphql_name
+        self.python_name = python_name
         self.attr_type = attr_type
 
     def render(self) -> str:
-        return f"{self.name}: {self.attr_type.render()}"
+        return f"{self.graphql_name}: {self.attr_type.render()}"
 
 
 class GraphQLType(GraphQLDataType):
@@ -58,6 +67,24 @@ class GraphQLType(GraphQLDataType):
 
     def ref(self, nullable: bool = False) -> GraphQLReference:
         return GraphQLReference(self, nullable=nullable)
+
+    def map_from_input(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
+        mapped_kwargs: Dict[str, Any] = {}
+        for attr in self.attrs:
+            mapped_kwargs[
+                attr.python_name
+            ] = attr.attr_type.referenced_type.map_from_input(kwargs[attr.graphql_name])
+
+        return mapped_kwargs
+
+    def map_to_output(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
+        mapped_kwargs: Dict[str, Any] = {}
+        for attr in self.attrs:
+            mapped_kwargs[
+                attr.graphql_name
+            ] = attr.attr_type.referenced_type.map_to_output(kwargs[attr.python_name])
+
+        return mapped_kwargs
 
     def render(self) -> str:
         separator = "\n    "
@@ -100,6 +127,10 @@ class GraphQLFunctionField(InjectableRequestType):
         assert self.reference
         return f"{self.name}: {self.reference.render()}"
 
+    def map_from_input(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
+        assert self.reference
+        return self.reference.referenced_type.map_from_input(kwargs)
+
 
 class GraphQLQueryField(GraphQLFunctionField):
     ...
@@ -129,3 +160,6 @@ class GraphQLFunction:
         if parameters:
             parameters = f"({parameters})"
         return f"{self.name}{parameters}: {self.return_type.render()}"
+
+    def map_to_output(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
+        return self.return_type.referenced_type.map_to_output(kwargs)

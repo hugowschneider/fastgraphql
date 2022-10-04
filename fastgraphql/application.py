@@ -14,6 +14,7 @@ from typing import (
     Any,
     Tuple,
     Dict,
+    cast,
 )
 from pydantic import BaseModel
 
@@ -183,7 +184,11 @@ class FastGraphQL:
                     else:
                         resolved_kwargs[name] = value
 
-                return func(**resolved_kwargs)
+                return_value = func(**resolved_kwargs)
+                if isinstance(return_value, BaseModel):
+                    return cast(T_ANY, graphql_type.map_to_output(return_value.dict()))
+                else:
+                    return return_value
 
             graphql_type.resolver = _decorator
 

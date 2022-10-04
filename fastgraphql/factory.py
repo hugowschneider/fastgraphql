@@ -194,9 +194,15 @@ class GraphQLTypeFactory:
                 continue
             graphql_attr_type, nullable = self.model_field_factory(field)
 
+            if "graphql_name" in field.field_info.extra:
+                field_name = field.field_info.extra["graphql_name"]
+            else:
+                field_name = field.name
+
             graphql_type.add_attribute(
                 GraphQLTypeAttribute(
-                    name=field.name,
+                    graphql_name=field_name,
+                    python_name=field.name,
                     attr_type=graphql_attr_type.ref(
                         nullable=field.allow_none or nullable
                     ),

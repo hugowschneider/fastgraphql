@@ -21,9 +21,14 @@ class InjectableRequestType(Injectable):
     def is_callable(self) -> bool:
         return self.python_type is not None
 
+    def map_from_input(
+        self, kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:  # pragma: no cover
+        raise NotImplementedError
+
     def __call__(self, *args: Tuple[Any], **kwargs: Dict[str, Any]) -> Any:
         if python_type := self.python_type:
-            return python_type(*args, **kwargs)
+            return python_type(*args, **self.map_from_input(kwargs))
         return None  # pragma: no cover
 
 
