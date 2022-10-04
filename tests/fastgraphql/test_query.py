@@ -12,7 +12,7 @@ class TestQueryRendering:
     def test_query_without_parameters(self) -> None:
         fast_graphql = FastGraphQL()
 
-        @fast_graphql.graphql_query()
+        @fast_graphql.query()
         def sample_query() -> str:
             return ""  # pragma: no cover
 
@@ -34,7 +34,7 @@ type Query {{
     def test_renamed_query(self) -> None:
         fast_graphql = FastGraphQL()
 
-        @fast_graphql.graphql_query(name="q1")
+        @fast_graphql.query(name="q1")
         def sample_query() -> str:
             return ""  # pragma: no cover
 
@@ -56,18 +56,18 @@ type Query {{
     def test_query_simple_parameters(self) -> None:
         fast_graphql = FastGraphQL()
 
-        @fast_graphql.graphql_query()
+        @fast_graphql.query()
         def sample_query(
-            t_int: int = fast_graphql.graphql_query_field(),
-            t_opt_int: Optional[int] = fast_graphql.graphql_query_field(),
-            t_str: str = fast_graphql.graphql_query_field(),
-            t_opt_str: Optional[str] = fast_graphql.graphql_query_field(),
-            t_float: float = fast_graphql.graphql_query_field(),
-            t_opt_float: Optional[float] = fast_graphql.graphql_query_field(),
-            t_datatime: datetime = fast_graphql.graphql_query_field(),
-            t_opt_datatime: Optional[datetime] = fast_graphql.graphql_query_field(),
-            t_boolean: bool = fast_graphql.graphql_query_field(),
-            t_opt_boolean: Optional[bool] = fast_graphql.graphql_query_field(),
+            t_int: int = fast_graphql.parameter(),
+            t_opt_int: Optional[int] = fast_graphql.parameter(),
+            t_str: str = fast_graphql.parameter(),
+            t_opt_str: Optional[str] = fast_graphql.parameter(),
+            t_float: float = fast_graphql.parameter(),
+            t_opt_float: Optional[float] = fast_graphql.parameter(),
+            t_datatime: datetime = fast_graphql.parameter(),
+            t_opt_datatime: Optional[datetime] = fast_graphql.parameter(),
+            t_boolean: bool = fast_graphql.parameter(),
+            t_opt_boolean: Optional[bool] = fast_graphql.parameter(),
         ) -> str:
             return ""  # pragma: no cover
 
@@ -91,9 +91,9 @@ type Query {{
     def test_query_renamed_parameters(self) -> None:
         fast_graphql = FastGraphQL()
 
-        @fast_graphql.graphql_query()
+        @fast_graphql.query()
         def sample_query(
-            t_int: int = fast_graphql.graphql_query_field(name="x"),
+            t_int: int = fast_graphql.parameter(name="x"),
         ) -> str:
             return ""  # pragma: no cover
 
@@ -115,9 +115,9 @@ type Query {{
     def test_query_retyped_parameters(self) -> None:
         fast_graphql = FastGraphQL()
 
-        @fast_graphql.graphql_query()
+        @fast_graphql.query()
         def sample_query(
-            t_int: int = fast_graphql.graphql_query_field(
+            t_int: int = fast_graphql.parameter(
                 name="x", graphql_scalar=GraphQLScalar("CustomScalar")
             )
         ) -> str:
@@ -146,10 +146,10 @@ type Query {{
         class Model(BaseModel):
             t_int: int
 
-        @fast_graphql.graphql_query()
+        @fast_graphql.query()
         def sample_query(
-            model1: Model = fast_graphql.graphql_query_field(),
-            model2: Model = fast_graphql.graphql_query_field(),
+            model1: Model = fast_graphql.parameter(),
+            model2: Model = fast_graphql.parameter(),
         ) -> str:
             return ""  # pragma: no cover
 
@@ -178,7 +178,7 @@ type Query {{
         class Model(BaseModel):
             t_int: int
 
-        @fast_graphql.graphql_query()
+        @fast_graphql.query()
         def sample_query() -> Model:
             return Model()  # pragma: no cover
 

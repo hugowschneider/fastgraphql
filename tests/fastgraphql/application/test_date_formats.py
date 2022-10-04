@@ -22,7 +22,7 @@ class TestDateFormats:
         date_format = "%d-%m-%Y"
         fast_graphql = FastGraphQL()
 
-        @fast_graphql.graphql_type()
+        @fast_graphql.type()
         class Model(BaseModel):
             t_datetime: date
 
@@ -39,7 +39,7 @@ class TestDateFormats:
 
         fast_graphql = FastGraphQL()
 
-        @fast_graphql.graphql_type()
+        @fast_graphql.type()
         class Model(BaseModel):
             t_datetime: time
 
@@ -54,7 +54,7 @@ class TestDateFormats:
         date_time_format = "%H:%M:%S D %Y-%m-%d"
         fast_graphql = FastGraphQL()
 
-        @fast_graphql.graphql_type()
+        @fast_graphql.type()
         class Model(BaseModel):
             t_datetime: datetime
 

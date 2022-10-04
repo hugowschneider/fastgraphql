@@ -36,7 +36,7 @@ def generator_function() -> Generator[DummyScopeObject, None, None]:
         obj.close()
 
 
-@fast_graphql.graphql_query()
+@fast_graphql.query()
 def query_function(
     depends: DummyScopeObject = fast_graphql.depends(function),
 ) -> str:
@@ -51,7 +51,7 @@ def query_function(
     return "result"
 
 
-@fast_graphql.graphql_query()
+@fast_graphql.query()
 def query_generator(
     depends: DummyScopeObject = fast_graphql.depends(generator_function),
 ) -> str:
@@ -78,7 +78,7 @@ def nested_depends_function(
     return len(depends)
 
 
-@fast_graphql.graphql_query()
+@fast_graphql.query()
 def query_nested_injection(
     depends: DummyScopeObject = fast_graphql.depends(nested_depends_function),
 ) -> str:

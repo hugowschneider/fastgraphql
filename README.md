@@ -55,7 +55,8 @@ from fastgraphql import FastGraphQL
 
 fast_graphql = FastGraphQL()
 
-@fast_graphql.graphql_type()
+
+@fast_graphql.type()
 class Model(BaseModel):
     t_int: int
     t_opt_int: Optional[int]
@@ -68,10 +69,12 @@ class Model(BaseModel):
     t_boolean: bool
     t_opt_boolean: Optional[bool]
 
-@fast_graphql.graphql_type()
+
+@fast_graphql.type()
 class Input(BaseModel):
     t_int: int
-    
+
+
 print(fast_graphql.render())
 ```
 
@@ -111,17 +114,21 @@ need to be explicitly annotated.
 ```python
 from fastgraphql import FastGraphQL
 from pydantic import BaseModel
+
 fast_graphql = FastGraphQL()
+
 
 class Model(BaseModel):
     param: str
 
-@fast_graphql.graphql_query()
+
+@fast_graphql.query()
 def my_first_query(
-        model: Model = fast_graphql.graphql_query_field(),
-        param: str = fast_graphql.graphql_query_field()
+        model: Model = fast_graphql.parameter(),
+        param: str = fast_graphql.parameter()
 ) -> str:
     ...
+
 
 print(fast_graphql.render())
 
@@ -140,20 +147,25 @@ type Query {
 
 # Dependecy Injection
 Query and Mutation can have dependencies injected using `FastGraphQL.depende(...)` as showed bellow:`
+
 ```python
 from fastgraphql import FastGraphQL
 from pydantic import BaseModel
+
 fast_graphql = FastGraphQL()
+
 
 class Model(BaseModel):
     param: str
 
+
 def create_dependency() -> str:
     return ""
-    
-@fast_graphql.graphql_query()
+
+
+@fast_graphql.query()
 def my_first_query(
-        model: Model = fast_graphql.graphql_query_field(),
+        model: Model = fast_graphql.parameter(),
         dependecy: str = fast_graphql.depends(create_dependency)
 ) -> str:
     ...
@@ -164,11 +176,99 @@ In this example the parameter `dependecy` will be injected once the query is cal
 # Integrations
 
 ## Ariadne
-...
+The developed GraphQL API can be easily integration 
+with [Ariadne](https://ariadnegraphql.org).
+
+```shell
+pip install fastgraphql[ariadne]
+```
+
+The method `make_executable_schema` in the module `fastgraphql.ariadne`
+can create the ariadne's executable schema to integrate to other
+frameworks like FastAPI. See https://ariadnegraphql.org/docs/starlette-integration
 
 ## FastAPI
+The developed GraphQL API can be easily served using [Ariadne](https://ariadnegraphql.org).  
+and [FastAPI](https://fastapi.tiangolo.com).
+
+```shell
+pip install fastgraphql[ariadne,fastapi]
+```
+
+_Note that Ariadne is needed to serve GraphQL APIs through FastAPI
+because no other GraphQL framework are yet integrated_ 
+
+To create the router that server the GraphQL API, `make_ariadne_fastapi_router`
+from the module `fastgraphql.fastapi` should be used. For example:
+
+```python
+from fastgraphql import FastGraphQL
+from fastapi import FastAPI
+from fastgraphql.fastapi import make_ariadne_fastapi_router
+
+app = FastAPI()
+fast_graphql = FastGraphQL()
+
 ...
+
+app.include_router(
+    make_ariadne_fastapi_router(fast_graphql=fast_graphql)
+)
+    
+
+
+```
+
+
+## SQLAlchemy
+
+To integrate SQLAlchemy models to the GraphQL API first all 
+dependency for SQLAlchemy should be installed using:
+
+```shell
+pip install fastgraphql[sqlalchemy]
+```
+
+SQLAlchemy, then, models can be incorporated to the GraphQL API 
+by first telling FastGraphQLwhat which is the base class to be 
+considered:
+
+```python
+from fastgraphql import FastGraphQL
+from sqlalchemy.ext.declarative import declarative_base
+
+fast_graphql = FastGraphQL()
+...
+Base = declarative_base(...)
+...
+
+fast_graphql.set_sqlalchemy_base(Base)
+```
+
+and after that, any SQLAlchemy model can be using as types and inputs.
+The models can also be used as query's and mutation's inputs and outpus. For example:
+
+```python
+from fastgraphql import FastGraphQL
+from sqlalchemy import Column, Integer
+from sqlalchemy.ext.declarative import declarative_base
+
+fast_graphql = FastGraphQL()
+...
+Base = declarative_base(...)
+...
+fast_graphql.set_sqlalchemy_base(Base)
+
+@fast_graphql.type()
+class MyModel(Base):
+    id = Column(Integer, primary_key=True)
+
+@fast_graphql.mutation()
+def mutation(input: int) -> MyModel:
+    ...
+
+```
 
 # Acknowledgment
 
-Thanks [FastAPI](https://fastapi.tiangolo.com) for inpirations
+Thanks [FastAPI](https://fastapi.tiangolo.com) for inpiration

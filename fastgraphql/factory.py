@@ -24,8 +24,6 @@ from fastgraphql.injection import InjectableFunction
 from fastgraphql.schema import (
     GraphQLSchema,
     SelfGraphQL,
-    SelfGraphQLType,
-    SelfGraphQLFunction,
 )
 from fastgraphql.types import (
     GraphQLDataType,
@@ -75,6 +73,7 @@ class GraphQLTypeFactory:
         self.schema = schema
         self.input_factory = input_factory
         self.date_formats = date_formats
+        self.sqlalchemy_base: Optional[Type[Any]] = None
 
     def create_graphql_type(
         self,
@@ -102,6 +101,32 @@ class GraphQLTypeFactory:
                     python_type=python_type,
                     name=name,
                     exclude_model_attrs=exclude_model_attrs,
+                ),
+                False,
+            )
+
+        if (base := self.sqlalchemy_base) and issubclass(python_type, base):
+            from fastgraphql.sqlalchemy import adapt_sqlalchemy_graphql
+
+            def parse_function(
+                python_type_: Type[Any],
+                exclude_model_attrs_: Optional[List[str]] = None,
+                name_: Optional[str] = None,
+            ) -> Tuple[GraphQLDataType, bool]:
+                return self.create_graphql_type(
+                    python_type=python_type_,
+                    exclude_model_attrs=exclude_model_attrs_,
+                    name=name_,
+                )
+
+            return (
+                adapt_sqlalchemy_graphql(
+                    python_type=python_type,
+                    name=name,
+                    schema=self.schema,
+                    exclude_model_attrs=exclude_model_attrs,
+                    parse_type_func=parse_function,
+                    as_input=self.input_factory,
                 ),
                 False,
             )
@@ -161,7 +186,11 @@ class GraphQLTypeFactory:
                 )
             )
 
-        self.add_graphql_metadata(python_type, graphql_type)
+        SelfGraphQL.add_type_metadata(
+            python_type=python_type,
+            graphql_type=graphql_type,
+            as_input=self.input_factory,
+        )
         if self.input_factory:
             self.schema.add_input_type(graphql_type=graphql_type)
         else:
@@ -181,18 +210,8 @@ class GraphQLTypeFactory:
             and not graphql_attr_type.default_scalar
         ):
             self.schema.add_scalar(graphql_attr_type)
-        return graphql_attr_type, nullable
 
-    def add_graphql_metadata(
-        self, input_type: Type[T], graphql_type: GraphQLType
-    ) -> None:
-        if not hasattr(input_type, "__graphql__"):
-            setattr(input_type, "__graphql__", SelfGraphQLType())
-        if i := SelfGraphQL.introspect(input_type):
-            if self.input_factory:
-                i.as_input = graphql_type
-            else:
-                i.as_type = graphql_type
+        return graphql_attr_type, nullable
 
 
 class GraphQLFunctionFactory:
@@ -217,7 +236,8 @@ class GraphQLFunctionFactory:
 
         if func_signature.return_annotation == inspect.Parameter.empty:
             raise GraphQLFactoryException(
-                f"{'Mutation' if self.mutation_factory else 'Query'} {name} implemented in {func.__qualname__} does not have a return type annotation"
+                f"{'Mutation' if self.mutation_factory else 'Query'} {name} implemented in {func.__qualname__}"
+                f" does not have a return type annotation"
             )
 
         graphql_type, nullable = self.type_factory.create_graphql_type(
@@ -238,7 +258,9 @@ class GraphQLFunctionFactory:
                     name=param_name,
                     injectable=self.dependency_injection_factory(definition.default),
                 )
-        self.add_graphql_metadata(func=func, graphql_function=graphql_query)
+        SelfGraphQL.add_funtion_metadata(
+            func=func, graphql_function=graphql_query, as_mutation=self.mutation_factory
+        )
 
         return graphql_query
 
@@ -278,14 +300,3 @@ class GraphQLFunctionFactory:
                 ] = self.dependency_injection_factory(definition.default)
 
         return injectable_function
-
-    def add_graphql_metadata(
-        self, func: Callable[..., T_ANY], graphql_function: GraphQLFunction
-    ) -> None:
-        if not hasattr(func, "__graphql__"):
-            setattr(func, "__graphql__", SelfGraphQLFunction())
-        if i := SelfGraphQL.introspect(func):
-            if self.mutation_factory:
-                i.as_mutation = graphql_function
-            else:
-                i.as_query = graphql_function

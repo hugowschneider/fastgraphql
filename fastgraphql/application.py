@@ -75,6 +75,10 @@ class FastGraphQL:
     def set_date_time_format(self, date_time_format: str) -> None:
         self._date_formats.date_time_format.set_value(date_time_format)
 
+    def set_sqlalchemy_base(self, base: Any) -> None:
+        self.input_factory.sqlalchemy_base = base
+        self.type_factory.sqlalchemy_base = base
+
     def render(self) -> str:
         return self.schema.render()
 
@@ -108,7 +112,7 @@ class FastGraphQL:
 
         return decorator
 
-    def graphql_type(
+    def type(
         self,
         exclude_model_attrs: Optional[List[str]] = None,
         name: Optional[str] = None,
@@ -117,7 +121,7 @@ class FastGraphQL:
             exclude_model_attrs=exclude_model_attrs, name=name, as_input=False
         )
 
-    def graphql_input(
+    def input(
         self,
         exclude_model_attrs: Optional[List[str]] = None,
         name: Optional[str] = None,
@@ -126,13 +130,13 @@ class FastGraphQL:
             exclude_model_attrs=exclude_model_attrs, name=name, as_input=True
         )
 
-    def graphql_query(
+    def query(
         self,
         name: Optional[str] = None,
     ) -> Callable[..., Callable[..., T_ANY]]:
         return self._graphql_function(name=name, as_mutation=False)
 
-    def graphql_mutation(
+    def mutation(
         self,
         name: Optional[str] = None,
     ) -> Callable[..., Callable[..., T_ANY]]:
@@ -187,7 +191,7 @@ class FastGraphQL:
 
         return decorator
 
-    def graphql_query_field(
+    def parameter(
         self, name: Optional[str] = None, graphql_scalar: Optional[GraphQLScalar] = None
     ) -> Any:
         if g := graphql_scalar:

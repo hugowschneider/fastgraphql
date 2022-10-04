@@ -17,25 +17,25 @@ JSON_CONTENT_TYPE_HEADER = {"Content-Type": "application/json"}
 fast_graphql = FastGraphQL()
 
 
-@fast_graphql.graphql_type()
-@fast_graphql.graphql_input(name="ModelInput")
+@fast_graphql.type()
+@fast_graphql.input(name="ModelInput")
 class Model(BaseModel):
     t_int: int
     t_date: datetime
 
 
-@fast_graphql.graphql_query()
+@fast_graphql.query()
 def std_type_query(
-    t_int: int = fast_graphql.graphql_query_field(),
-    t_opt_int: Optional[int] = fast_graphql.graphql_query_field(),
-    t_str: str = fast_graphql.graphql_query_field(),
-    t_opt_str: Optional[str] = fast_graphql.graphql_query_field(),
-    t_float: float = fast_graphql.graphql_query_field(),
-    t_opt_float: Optional[float] = fast_graphql.graphql_query_field(),
-    t_datatime: datetime = fast_graphql.graphql_query_field(),
-    t_opt_datatime: Optional[datetime] = fast_graphql.graphql_query_field(),
-    t_boolean: bool = fast_graphql.graphql_query_field(),
-    t_opt_boolean: Optional[bool] = fast_graphql.graphql_query_field(),
+    t_int: int = fast_graphql.parameter(),
+    t_opt_int: Optional[int] = fast_graphql.parameter(),
+    t_str: str = fast_graphql.parameter(),
+    t_opt_str: Optional[str] = fast_graphql.parameter(),
+    t_float: float = fast_graphql.parameter(),
+    t_opt_float: Optional[float] = fast_graphql.parameter(),
+    t_datatime: datetime = fast_graphql.parameter(),
+    t_opt_datatime: Optional[datetime] = fast_graphql.parameter(),
+    t_boolean: bool = fast_graphql.parameter(),
+    t_opt_boolean: Optional[bool] = fast_graphql.parameter(),
 ) -> str:
     setattr(std_type_query, "__called__", True)
     setattr(
@@ -57,8 +57,8 @@ def std_type_query(
     return "result"
 
 
-@fast_graphql.graphql_query()
-def model_query(model: Model = fast_graphql.graphql_query_field()) -> Model:
+@fast_graphql.query()
+def model_query(model: Model = fast_graphql.parameter()) -> Model:
     setattr(model_query, "__called__", True)
     setattr(model_query, "__parameters__", {"model": model})
     return model

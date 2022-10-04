@@ -16,18 +16,18 @@ GRAPHQL_URL = "/graphql"
 fast_graphql = FastGraphQL()
 
 
-@fast_graphql.graphql_type()
+@fast_graphql.type()
 class Model(BaseModel):
     t_int: int
 
 
-@fast_graphql.graphql_query()
+@fast_graphql.query()
 def sample_query() -> str:
     setattr(sample_query, "__called__", True)
     return "result"
 
 
-@fast_graphql.graphql_mutation()
+@fast_graphql.mutation()
 def sample_mutation() -> str:
     setattr(sample_mutation, "__called__", True)
     return "result"
