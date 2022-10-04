@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastgraphql"
-version = "0.0.3"
+version = "0.0.4"
 description = "FastGraphQL is intended to help developer create code driven GraphQL APIs"
 authors = ["Hugo Wruck Schneider <hugowschneider@gmail.com>"]
 license = "MIT"
