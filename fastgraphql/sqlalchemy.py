@@ -153,9 +153,13 @@ def adapt_column(
     )
     if isinstance(graphql_type, GraphQLScalar) and not graphql_type.default_scalar:
         schema.add_scalar(graphql_type)
+    if "graphql_name" in column.info:
+        graphql_name = column.info["graphql_name"]
+    else:
+        graphql_name = column.name
 
     return GraphQLTypeAttribute(
-        graphql_name=column.name,
+        graphql_name=graphql_name,
         python_name=column.name,
         attr_type=graphql_type.ref(nullable=column.nullable),
     )

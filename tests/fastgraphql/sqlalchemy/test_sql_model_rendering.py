@@ -289,3 +289,23 @@ type Query {{
         assert self_graphql.as_query
         assert self_graphql.as_query.render() == expected_query_definition
         assert fast_graphql.render() == expected_graphql_definition
+
+    def test_type_with_custom_field_name(self, fast_graphql: FastGraphQL) -> None:
+        Base = declarative_base()  # type: Any # NOSONAR
+        fast_graphql.set_sqlalchemy_base(Base)
+
+        @fast_graphql.type()
+        class Model(Base):
+            __tablename__ = "test1"
+            id = Column(Integer, primary_key=True, info={"graphql_name": "primaryKey"})
+
+        expected_graphql_def = """
+type Model {
+    primaryKey: Int!
+} 
+            """.strip()
+        self_graphql = SelfGraphQL.introspect(Model)
+        assert self_graphql
+        assert self_graphql.as_type
+
+        assert self_graphql.as_type.render() == expected_graphql_def
