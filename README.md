@@ -70,7 +70,7 @@ class Model(BaseModel):
     t_opt_boolean: Optional[bool]
 
 
-@fast_graphql.type()
+@fast_graphql.input()
 class Input(BaseModel):
     t_int: int
 
@@ -96,7 +96,7 @@ type Model {
     t_opt_boolean: Boolean
 }
 
-type Input {
+input Input {
     t_int: Int!
 }
 ```
@@ -129,6 +129,13 @@ def my_first_query(
 ) -> str:
     ...
 
+@fast_graphql.mutation()
+def my_first_mutation(
+        model: Model = fast_graphql.parameter(),
+        param: str = fast_graphql.parameter()
+) -> str:
+    ...
+
 
 print(fast_graphql.render())
 
@@ -142,6 +149,10 @@ input Model {
 }
 type Query {
     my_first_query(model: Model!, param: String!): String!
+}
+
+type Query {
+    my_first_mutation(model: Model!, param: String!): String!
 }
 ```
 
@@ -271,4 +282,4 @@ def mutation(input: int) -> MyModel:
 
 # Acknowledgment
 
-Thanks [FastAPI](https://fastapi.tiangolo.com) for inpiration
+Thanks [FastAPI](https://fastapi.tiangolo.com) for inspiration

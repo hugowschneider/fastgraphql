@@ -1,4 +1,4 @@
-from typing import Any, Callable, List, Optional, Tuple, Type, TypeVar
+from typing import Any, Callable, List, Optional, Tuple, Type, TypeVar, cast
 
 from sqlalchemy.exc import NoInspectionAvailable
 from sqlalchemy.sql.type_api import TypeEngine
@@ -16,7 +16,7 @@ from fastgraphql.types import (
 try:
     from sqlalchemy import ARRAY, Column
     from sqlalchemy.inspection import inspect as inspect
-    from sqlalchemy.orm import RelationshipProperty
+    from sqlalchemy.orm import RelationshipProperty, Mapper
 except ImportError as e:  # pragma: no cover
     raise ImportError(f"{e}.\nPlease use `pip install fastgraphql[sqlalchemy]`")
 
@@ -25,6 +25,15 @@ T = TypeVar("T")
 CREATE_GRAPHQL_TYPE_SIGNATURE = Callable[
     [Type[Any], Optional[List[str]], Optional[str]], Tuple[GraphQLDataType, bool]
 ]
+
+
+def check_if_exists(python_type: Type[Any], as_input: bool) -> Optional[GraphQLType]:
+    if i := SelfGraphQL.introspect(python_type):
+        if as_input and (graphql_input := i.as_input):
+            return cast(GraphQLType, graphql_input)
+        elif not as_input and (graphql_type := i.as_type):
+            return cast(GraphQLType, graphql_type)
+    return None
 
 
 def adapt_sqlalchemy_graphql(
@@ -47,18 +56,17 @@ def adapt_sqlalchemy_graphql(
             f"{python_type.__qualname__} does not seems to be a SQLAlchemy Model\n{e}"
         )
 
-    if i := SelfGraphQL.introspect(python_type):
-        if as_input and (graphql_input := i.as_input):
-            return graphql_input
-        elif not as_input and (graphql_type := i.as_type):
-            return graphql_type
+    if graphql_type := check_if_exists(python_type=python_type, as_input=as_input):
+        return graphql_type
 
     foreign_columns = []
     column: Column[Any]
     graphql_type = GraphQLType(name=name, as_input=as_input, python_type=python_type)
+
     for column in mapper.columns:
         if column.name in exclude_model_attrs:
             continue
+
         if column.foreign_keys:
             foreign_columns.append(column)
             continue
@@ -67,6 +75,39 @@ def adapt_sqlalchemy_graphql(
             adapt_column(column=column, parse_type_func=parse_type_func, schema=schema)
         )
 
+    adapt_relation(
+        graphql_type=graphql_type,
+        mapper=mapper,
+        foreign_columns=foreign_columns,
+        schema=schema,
+        parse_type_func=parse_type_func,
+        as_input=as_input,
+    )
+
+    for column in foreign_columns:
+        graphql_type.add_attribute(
+            adapt_column(column=column, parse_type_func=parse_type_func, schema=schema)
+        )
+
+    SelfGraphQL.add_type_metadata(
+        python_type=python_type, graphql_type=graphql_type, as_input=as_input
+    )
+    if as_input:
+        schema.add_input_type(graphql_type=graphql_type)
+    else:
+        schema.add_type(graphql_type=graphql_type)
+
+    return graphql_type
+
+
+def adapt_relation(
+    graphql_type: GraphQLType,
+    mapper: Mapper,
+    foreign_columns: List[Column[Any]],
+    schema: GraphQLSchema,
+    parse_type_func: CREATE_GRAPHQL_TYPE_SIGNATURE,
+    as_input: bool,
+) -> None:
     relation: RelationshipProperty[Any]
     for relation in mapper.relationships:
         nullable = any(c.nullable for c in relation.local_columns)
@@ -86,21 +127,6 @@ def adapt_sqlalchemy_graphql(
 
         for column in relation.local_columns:
             foreign_columns.remove(column)
-
-    for column in foreign_columns:
-        graphql_type.add_attribute(
-            adapt_column(column=column, parse_type_func=parse_type_func, schema=schema)
-        )
-
-    SelfGraphQL.add_type_metadata(
-        python_type=python_type, graphql_type=graphql_type, as_input=as_input
-    )
-    if as_input:
-        schema.add_input_type(graphql_type=graphql_type)
-    else:
-        schema.add_type(graphql_type=graphql_type)
-
-    return graphql_type
 
 
 def parse_sql_type(

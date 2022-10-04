@@ -21,6 +21,7 @@ from fastgraphql.schema import SelfGraphQL, GraphQLSchema
 from fastgraphql.sqlalchemy import adapt_sqlalchemy_graphql
 from fastgraphql.types import GraphQLDataType
 
+TEST_TABLE_ID = "test1.id"
 
 expected_scalar_def = """
 scalar DateTime
@@ -35,7 +36,7 @@ def fast_graphql() -> FastGraphQL:
 
 class TestSQLTypeRendering:
     def test_simple_type(self, fast_graphql: FastGraphQL) -> None:
-        Base = declarative_base()  # type: Any
+        Base = declarative_base()  # type: Any # NOSONAR
         fast_graphql.set_sqlalchemy_base(Base)
 
         @fast_graphql.type()
@@ -98,7 +99,7 @@ type TypeWithoutReferences {
             )
 
     def test_type_with_relationship(self, fast_graphql: FastGraphQL) -> None:
-        Base = declarative_base()  # type: Any
+        Base = declarative_base()  # type: Any # NOSONAR
         fast_graphql.set_sqlalchemy_base(Base)
 
         class TypeWithoutReferences(Base):
@@ -109,7 +110,7 @@ type TypeWithoutReferences {
         class TypeReference(Base):
             __tablename__ = "test2"
             id = Column(Integer, primary_key=True)
-            reference_id = Column(Integer, ForeignKey("test1.id"), nullable=False)
+            reference_id = Column(Integer, ForeignKey(TEST_TABLE_ID), nullable=False)
             reference: TypeWithoutReferences = cast(
                 TypeWithoutReferences, relationship("TypeWithoutReferences")
             )
@@ -118,7 +119,7 @@ type TypeWithoutReferences {
         class TypeNullableReference(Base):
             __tablename__ = "test3"
             id = Column(Integer, primary_key=True)
-            reference_id = Column(Integer, ForeignKey("test1.id"), nullable=True)
+            reference_id = Column(Integer, ForeignKey(TEST_TABLE_ID), nullable=True)
             reference: TypeWithoutReferences = cast(
                 TypeWithoutReferences, relationship("TypeWithoutReferences")
             )
@@ -148,7 +149,7 @@ type TypeNullableReference {
         assert self_graphql.as_type.render() == expected_graphql_def
 
     def test_excluded_attrs(self, fast_graphql: FastGraphQL) -> None:
-        Base = declarative_base()  # type: Any
+        Base = declarative_base()  # type: Any # NOSONAR
         fast_graphql.set_sqlalchemy_base(Base)
 
         @fast_graphql.type(exclude_model_attrs=["id"])
@@ -168,10 +169,10 @@ type Model {
         assert self_graphql.as_type.render() == expected_graphql_def
 
     def test_type_with_foreign_key_only(self, fast_graphql: FastGraphQL) -> None:
-        Base = declarative_base()  # type: Any
+        Base = declarative_base()  # type: Any # NOSONAR
         fast_graphql.set_sqlalchemy_base(Base)
 
-        class TypeWithoutReferences(Base):
+        class TypeWithoutReferences(Base):  # NOSONAR
             __tablename__ = "test1"
             id = Column(Integer, primary_key=True)
 
@@ -179,13 +180,13 @@ type Model {
         class TypeReference(Base):
             __tablename__ = "test2"
             id = Column(Integer, primary_key=True)
-            reference_id = Column(Integer, ForeignKey("test1.id"), nullable=False)
+            reference_id = Column(Integer, ForeignKey(TEST_TABLE_ID), nullable=False)
 
         @fast_graphql.type()
         class TypeNullableReference(Base):
             __tablename__ = "test3"
             id = Column(Integer, primary_key=True)
-            reference_id = Column(Integer, ForeignKey("test1.id"), nullable=True)
+            reference_id = Column(Integer, ForeignKey(TEST_TABLE_ID), nullable=True)
 
         expected_graphql_def = """
 type TypeReference {
@@ -212,7 +213,7 @@ type TypeNullableReference {
         assert self_graphql.as_type.render() == expected_graphql_def
 
     def test_type_with_arrays(self, fast_graphql: FastGraphQL) -> None:
-        Base = declarative_base()  # type: Any
+        Base = declarative_base()  # type: Any # NOSONAR
         fast_graphql.set_sqlalchemy_base(Base)
 
         @fast_graphql.type()
@@ -252,7 +253,7 @@ type TypeNullableArray {
         assert self_graphql.as_type.render() == expected_graphql_def
 
     def test_sql_type_as_query_input(self, fast_graphql: FastGraphQL) -> None:
-        Base = declarative_base()  # type: Any
+        Base = declarative_base()  # type: Any # NOSONAR
         fast_graphql.set_sqlalchemy_base(Base)
 
         @fast_graphql.input(name="ModelInput")

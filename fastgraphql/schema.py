@@ -149,7 +149,7 @@ class SelfGraphQL:
 
     @classmethod
     def add_funtion_metadata(
-        self,
+        cls,
         func: Callable[..., T],
         graphql_function: GraphQLFunction,
         as_mutation: bool = False,
