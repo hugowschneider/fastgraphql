@@ -1,5 +1,5 @@
 from datetime import date, datetime, time
-from typing import Optional, List, Type, cast
+from typing import Optional, Type, cast
 
 import pytest
 from pydantic import BaseModel
@@ -16,7 +16,7 @@ from fastgraphql.scalars import (
     GraphQLBoolean,
 )
 from fastgraphql.schema import GraphQLSchema
-from fastgraphql.types import GraphQLArray, GraphQLReference, GraphQLType
+from fastgraphql.types import GraphQLType
 
 
 @pytest.fixture(scope="function")
@@ -139,45 +139,6 @@ class TestFactoryTypeParsing:
         assert nullable
         assert isinstance(graphql_type, GraphQLBoolean)
 
-    def test_array_non_nullable(self, factory: GraphQLTypeFactory) -> None:
-        graphql_type, nullable = factory.create_graphql_type(
-            python_type=List[bool], exclude_model_attrs=[], name=""
-        )
-
-        assert not nullable
-        assert isinstance(graphql_type, GraphQLArray)
-        assert isinstance(graphql_type.item_type, GraphQLReference)
-        assert graphql_type.item_type.nullable is False
-        assert graphql_type.item_type.referenced_type.name == "Boolean"
-
-    def test_array_non_nullable_nullable_item(
-        self, factory: GraphQLTypeFactory
-    ) -> None:
-        graphql_type, nullable = factory.create_graphql_type(
-            python_type=List[Optional[bool]], exclude_model_attrs=[], name=""
-        )
-
-        assert not nullable
-        assert isinstance(graphql_type, GraphQLArray)
-        assert isinstance(graphql_type.item_type, GraphQLReference)
-        assert graphql_type.item_type.nullable
-        assert graphql_type.item_type.referenced_type.name == "Boolean"
-
-    def test_array_nullable_non_nullable_item(
-        self, factory: GraphQLTypeFactory
-    ) -> None:
-        graphql_type, nullable = factory.create_graphql_type(
-            python_type=cast(Type[Optional[List[bool]]], Optional[List[bool]]),
-            exclude_model_attrs=[],
-            name="",
-        )
-
-        assert nullable
-        assert isinstance(graphql_type, GraphQLArray)
-        assert isinstance(graphql_type.item_type, GraphQLReference)
-        assert graphql_type.item_type.nullable is False
-        assert graphql_type.item_type.referenced_type.name == "Boolean"
-
     def test_model_type(self, factory: GraphQLTypeFactory) -> None:
         class Model(BaseModel):
             ...
@@ -199,56 +160,6 @@ class TestFactoryTypeParsing:
         )
         assert nullable
         assert isinstance(graphql_type, GraphQLType)
-
-    def test_model_array_non_nullable(self, factory: GraphQLTypeFactory) -> None:
-        class Model(BaseModel):
-            ...
-
-        graphql_type, nullable = factory.create_graphql_type(
-            python_type=List[Model], exclude_model_attrs=[], name=""
-        )
-
-        assert not nullable
-        assert isinstance(graphql_type, GraphQLArray)
-        assert isinstance(graphql_type.item_type, GraphQLReference)
-        assert graphql_type.item_type.nullable is False
-        assert graphql_type.item_type.referenced_type.name == "Model"
-
-    def test_model_array_non_nullable_nullable_item(
-        self, factory: GraphQLTypeFactory
-    ) -> None:
-        class Model(BaseModel):
-            ...
-
-        graphql_type, nullable = factory.create_graphql_type(
-            python_type=List[Optional[Model]],
-            exclude_model_attrs=[],
-            name="",
-        )
-
-        assert not nullable
-        assert isinstance(graphql_type, GraphQLArray)
-        assert isinstance(graphql_type.item_type, GraphQLReference)
-        assert graphql_type.item_type.nullable
-        assert graphql_type.item_type.referenced_type.name == "Model"
-
-    def test_model_array_nullable_non_nullable_item(
-        self, factory: GraphQLTypeFactory
-    ) -> None:
-        class Model(BaseModel):
-            ...
-
-        graphql_type, nullable = factory.create_graphql_type(
-            python_type=cast(Type[Optional[List[Model]]], Optional[List[Model]]),
-            exclude_model_attrs=[],
-            name="",
-        )
-
-        assert nullable
-        assert isinstance(graphql_type, GraphQLArray)
-        assert isinstance(graphql_type.item_type, GraphQLReference)
-        assert graphql_type.item_type.nullable is False
-        assert graphql_type.item_type.referenced_type.name == "Model"
 
     def test_unsupported_type(self, factory: GraphQLTypeFactory) -> None:
         class Model:

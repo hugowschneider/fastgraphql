@@ -16,7 +16,7 @@ class TestPydanticInputRendering:
     def test_simple_type(self) -> None:
         fast_graphql = FastGraphQL()
 
-        @fast_graphql.graphql_input()
+        @fast_graphql.input()
         class TypeWithoutReferences(BaseModel):
             t_int: int
             t_opt_int: Optional[int]
@@ -58,7 +58,7 @@ input TypeWithoutReferences {
     def test_simple_type_with_name(self) -> None:
         fast_graphql = FastGraphQL()
 
-        @fast_graphql.graphql_input(name="Type1")
+        @fast_graphql.input(name="Type1")
         class TypeWithoutReferences(BaseModel):
             t_int: int
             t_opt_int: Optional[int]
@@ -95,14 +95,14 @@ input Type1 {
     def test_nested_type(self) -> None:
         fast_graphql = FastGraphQL()
 
-        @fast_graphql.graphql_input()
+        @fast_graphql.input()
         class TypeWithoutReferences(BaseModel):
             t_int: int
             t_str: str
             t_float: float
             t_datatime: datetime
 
-        @fast_graphql.graphql_input()
+        @fast_graphql.input()
         class TypeWithReference(BaseModel):
             t_int: int
             t_type_with_references: TypeWithoutReferences
@@ -134,14 +134,14 @@ input TypeWithReference {
     def test_nested_type_with_name(self) -> None:
         fast_graphql = FastGraphQL()
 
-        @fast_graphql.graphql_input(name="Type1")
+        @fast_graphql.input(name="Type1")
         class TypeWithoutReferences(BaseModel):
             t_int: int
             t_str: str
             t_float: float
             t_datatime: datetime
 
-        @fast_graphql.graphql_input(name="Type2")
+        @fast_graphql.input(name="Type2")
         class TypeWithReference(BaseModel):
             t_int: int
             t_type_with_references: TypeWithoutReferences
@@ -173,7 +173,7 @@ input Type2 {
     def test_simple_type_exclude_attr(self) -> None:
         fast_graphql = FastGraphQL()
 
-        @fast_graphql.graphql_input(exclude_model_attrs=["t_int", "t_str"])
+        @fast_graphql.input(exclude_model_attrs=["t_int", "t_str"])
         class TypeWithoutReferences(BaseModel):
             t_int: int
             t_opt_int: Optional[int]
@@ -207,7 +207,7 @@ input TypeWithoutReferences {
     def test_model_with_generic_types(self) -> None:
         fast_graphql = FastGraphQL()
 
-        @fast_graphql.graphql_input()
+        @fast_graphql.input()
         class ModelWithGenericTypes(BaseModel):
             t_ints: List[int]
             t_str: List[str]
@@ -247,7 +247,7 @@ input ModelWithGenericTypes {
     def test_graphql_id(self) -> None:
         fast_graphql = FastGraphQL()
 
-        @fast_graphql.graphql_input()
+        @fast_graphql.input()
         class ModelWithId(BaseModel):
             t_id: str = Field(..., graphql_scalar=GraphQLID())
 
@@ -266,7 +266,7 @@ input ModelWithId {
         class ParentModel(BaseModel):
             t_id: int
 
-        @fast_graphql.graphql_input()
+        @fast_graphql.input()
         class ChildModel(ParentModel):
             t_str: str
 

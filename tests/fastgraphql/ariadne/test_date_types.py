@@ -12,11 +12,11 @@ from fastgraphql.fastapi import make_ariadne_fastapi_router
 fast_graphql = FastGraphQL()
 
 
-@fast_graphql.graphql_query()
+@fast_graphql.query()
 def date_query(
-    t_datetime: datetime = fast_graphql.graphql_query_field(),
-    t_date: date = fast_graphql.graphql_query_field(),
-    t_time: time = fast_graphql.graphql_query_field(),
+    t_datetime: datetime = fast_graphql.parameter(),
+    t_date: date = fast_graphql.parameter(),
+    t_time: time = fast_graphql.parameter(),
 ) -> str:
     setattr(date_query, "__called__", True)
     setattr(

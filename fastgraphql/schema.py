@@ -8,12 +8,15 @@ from typing import (
     Union,
     Callable,
     overload,
+    TypeVar,
 )
 
 
 from fastgraphql.exceptions import GraphQLSchemaException
 from fastgraphql.scalars import GraphQLScalar
 from fastgraphql.types import GraphQLType, GraphQLFunction
+
+T = TypeVar("T")
 
 
 class GraphQLSchema:
@@ -131,6 +134,33 @@ class SelfGraphQL:
         if hasattr(type_, "__graphql__"):
             return cast(SelfGraphQL, getattr(type_, "__graphql__"))
         return None
+
+    @classmethod
+    def add_type_metadata(
+        cls, python_type: Type[T], graphql_type: GraphQLType, as_input: bool
+    ) -> None:
+        if not hasattr(python_type, "__graphql__"):
+            setattr(python_type, "__graphql__", SelfGraphQLType())
+        if i := SelfGraphQL.introspect(python_type):
+            if as_input:
+                i.as_input = graphql_type
+            else:
+                i.as_type = graphql_type
+
+    @classmethod
+    def add_funtion_metadata(
+        cls,
+        func: Callable[..., T],
+        graphql_function: GraphQLFunction,
+        as_mutation: bool = False,
+    ) -> None:
+        if not hasattr(func, "__graphql__"):
+            setattr(func, "__graphql__", SelfGraphQLFunction())
+        if i := SelfGraphQL.introspect(func):
+            if as_mutation:
+                i.as_mutation = graphql_function
+            else:
+                i.as_query = graphql_function
 
 
 class SelfGraphQLType(SelfGraphQL):

@@ -8,8 +8,8 @@ class TestMixedAnnotationsRendering:
     def test_type_input(self) -> None:
         fast_graphql = FastGraphQL()
 
-        @fast_graphql.graphql_type()
-        @fast_graphql.graphql_input(name="ModelInput")
+        @fast_graphql.type()
+        @fast_graphql.input(name="ModelInput")
         class Model(BaseModel):
             t_int: int
 
@@ -23,8 +23,8 @@ class TestMixedAnnotationsRendering:
     def test_input_type(self) -> None:
         fast_graphql = FastGraphQL()
 
-        @fast_graphql.graphql_input(name="ModelInput")
-        @fast_graphql.graphql_type()
+        @fast_graphql.input(name="ModelInput")
+        @fast_graphql.type()
         class Model(BaseModel):
             t_int: int
 

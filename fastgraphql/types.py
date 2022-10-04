@@ -1,10 +1,9 @@
 from typing import Any, Callable, List, Optional, Type, TypeVar, Dict
 
-from pydantic import BaseModel
 from fastgraphql.injection import Injectable, InjectableRequestType
 
 T_ANY = TypeVar("T_ANY")
-T = TypeVar("T", bound=BaseModel)
+T = TypeVar("T")
 
 
 class GraphQLDataType:
