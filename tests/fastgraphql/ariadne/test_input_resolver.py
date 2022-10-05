@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 
 from fastgraphql import FastGraphQL
 from fastgraphql.fastapi import make_ariadne_fastapi_router
+from fastgraphql.utils import DefaultToCamelCase
 
 GRAPHQL_URL = "/graphql"
 JSON_CONTENT_TYPE_HEADER = {"Content-Type": "application/json"}
@@ -110,6 +111,20 @@ def nested_model_custom_field_query(
     return model
 
 
+@fast_graphql.query()
+def query_custom_param_name(t_int: int = fast_graphql.parameter(name="typeInt")) -> int:
+    setattr(query_custom_param_name, "__called__", True)
+    setattr(query_custom_param_name, "__parameters__", {"t_int": t_int})
+    return t_int
+
+
+@fast_graphql.query(default_names=DefaultToCamelCase())
+def query_camel_case(t_int: int = fast_graphql.parameter()) -> int:
+    setattr(query_camel_case, "__called__", True)
+    setattr(query_camel_case, "__parameters__", {"t_int": t_int})
+    return t_int
+
+
 @pytest.fixture(scope="class", autouse=True)
 def fastapi_test(request: Any) -> None:
 
@@ -127,7 +142,7 @@ class TestInputResolversWithAriadneFastAPIIntegration:
 
     def test_graphql_simple_input_resolver_with_nones(self) -> None:
         query = """
-query StdTypeQuery(
+query Query(
             $t_int: Int!,
             $t_opt_int: Int,
             $t_str: String!,
@@ -207,7 +222,7 @@ query StdTypeQuery(
 
     def test_graphql_simple_input_resolver_without_nones(self) -> None:
         query = """
-query StdTypeQuery(
+query Query(
             $t_int: Int!,
             $t_opt_int: Int,
             $t_str: String!,
@@ -286,7 +301,7 @@ query StdTypeQuery(
 
     def test_graphql_model_input_resolver(self) -> None:
         query = """
-      query StdTypeQuery(
+      query Query(
                   $model: ModelInput!
       ){
           model_query(
@@ -332,7 +347,7 @@ query StdTypeQuery(
 
     def test_graphql_nested_model_input_resolver(self) -> None:
         query = """
-query StdTypeQuery(
+query Query(
             $model: NestedModelInput!
 ){
     nested_model_query(
@@ -385,7 +400,7 @@ query StdTypeQuery(
 
     def test_graphql_model_with_custom_field_name(self) -> None:
         query = """
-query StdTypeQuery(
+query Query(
             $model: ModelCustomFieldInput!
 ){
     model_custom_field_query(
@@ -437,7 +452,7 @@ query StdTypeQuery(
     def test_graphql_nested_model_with_custom_field_name(self) -> None:
 
         query = """
-query StdTypeQuery(
+query Query(
             $model: NestedModelCustomFieldInput!
 ){
     nested_model_custom_field_query(
@@ -494,3 +509,71 @@ query StdTypeQuery(
         assert isinstance(parameters["model"], NestedModelCustomField)
         assert isinstance(parameters["model"].model_custom_field, ModelCustomField)
         assert parameters["model"].t_int == variables["model"]["typeInt"]
+
+    def test_query_custom_param_name(self) -> None:
+        query = """
+query Query(
+            $typeInt: Int!,
+){
+    query_custom_param_name(
+            typeInt: $typeInt, 
+    )
+}
+        """.strip()
+
+        variables = {
+            "typeInt": 911,
+        }
+        response = self.test_client.post(
+            GRAPHQL_URL,
+            data=json.dumps(
+                {"query": query, "variables": variables},
+                default=lambda x: x.isoformat(),
+            ),
+            headers=JSON_CONTENT_TYPE_HEADER,
+        )
+        assert response.status_code == 200, response.json()
+        assert "errors" not in response.json(), response.json()
+        assert "data" in response.json(), response.json()
+        assert "query_custom_param_name" in response.json()["data"]
+        assert hasattr(query_custom_param_name, "__called__") and getattr(
+            query_custom_param_name, "__called__"
+        )
+        parameters = getattr(query_custom_param_name, "__parameters__")
+        assert parameters
+        assert isinstance(parameters["t_int"], int)
+        assert parameters["t_int"] == variables["typeInt"]
+
+    def test_query_camel_case(self) -> None:
+        query = """
+query Query(
+            $tInt: Int!,
+){
+    queryCamelCase(
+            tInt: $tInt, 
+    )
+}
+        """.strip()
+
+        variables = {
+            "tInt": 911,
+        }
+        response = self.test_client.post(
+            GRAPHQL_URL,
+            data=json.dumps(
+                {"query": query, "variables": variables},
+                default=lambda x: x.isoformat(),
+            ),
+            headers=JSON_CONTENT_TYPE_HEADER,
+        )
+        assert response.status_code == 200, response.json()
+        assert "errors" not in response.json(), response.json()
+        assert "data" in response.json(), response.json()
+        assert "queryCamelCase" in response.json()["data"]
+        assert hasattr(query_camel_case, "__called__") and getattr(
+            query_camel_case, "__called__"
+        )
+        parameters = getattr(query_camel_case, "__parameters__")
+        assert parameters
+        assert isinstance(parameters["t_int"], int)
+        assert parameters["t_int"] == variables["tInt"]

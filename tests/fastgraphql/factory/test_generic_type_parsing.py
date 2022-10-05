@@ -12,7 +12,9 @@ from fastgraphql.types import GraphQLArray, GraphQLReference
 @pytest.fixture(scope="function")
 def factory() -> GraphQLTypeFactory:
     return GraphQLTypeFactory(
-        schema=GraphQLSchema(), date_formats=_DateFormats("", "", "")
+        schema=GraphQLSchema(),
+        date_formats=_DateFormats("", "", ""),
+        default_names=None,
     )
 
 
