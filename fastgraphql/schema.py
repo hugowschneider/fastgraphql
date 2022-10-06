@@ -135,6 +135,17 @@ class SelfGraphQL:
             return cast(SelfGraphQL, getattr(type_, "__graphql__"))
         return None
 
+    @staticmethod
+    def check_if_exists(
+        python_type: Type[Any], as_input: bool
+    ) -> Optional[GraphQLType]:
+        if i := SelfGraphQL.introspect(python_type):
+            if as_input and (graphql_input := i.as_input):
+                return cast(GraphQLType, graphql_input)
+            elif not as_input and (graphql_type := i.as_type):
+                return cast(GraphQLType, graphql_type)
+        return None
+
     @classmethod
     def add_type_metadata(
         cls, python_type: Type[T], graphql_type: GraphQLType, as_input: bool

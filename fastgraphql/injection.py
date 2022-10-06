@@ -1,4 +1,6 @@
+import inspect
 from typing import Any, Callable, Dict, Optional, Tuple, Type
+from graphql import GraphQLResolveInfo
 
 
 class Injectable:
@@ -39,10 +41,32 @@ class InjectableFunction(Injectable):
 
     def __call__(self, *args: Tuple[Any], **kwargs: Dict[str, Any]) -> Any:
         if c := self.callable:
+            resolved_kwargs = {}
             for name, dependency in self.dependencies.items():
-                kwargs[name] = dependency(*kwargs)
-            return c(**kwargs)
+                resolved_kwargs[name] = dependency(*args, **kwargs)
+            value = c(**resolved_kwargs)
+            if inspect.isgenerator(value):
+                value = next(value)
+
+            return value
 
 
 class InjectableType(Injectable):
-    ...
+    def __init__(self, python_type: type) -> None:
+        self.python_type = python_type
+
+    def __call__(self, *args: Tuple[Any], **kwargs: Dict[str, Any]) -> Any:
+        for arg in args:
+            if isinstance(arg, self.python_type):
+                return arg
+
+        for key, value in kwargs.items():
+            if isinstance(value, self.python_type):
+                return value
+
+        return None
+
+
+class InjectableContext(InjectableType):
+    def __init__(self) -> None:
+        super().__init__(python_type=GraphQLResolveInfo)

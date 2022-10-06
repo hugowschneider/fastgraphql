@@ -1,5 +1,4 @@
 import functools
-import inspect
 import logging
 
 from fastgraphql.exceptions import GraphQLRunTimeError
@@ -18,7 +17,7 @@ from typing import (
 )
 from pydantic import BaseModel
 
-from fastgraphql.injection import InjectableFunction
+from fastgraphql.injection import InjectableFunction, InjectableContext, InjectableType
 from fastgraphql.schema import GraphQLSchema
 from fastgraphql.types import GraphQLType, GraphQLQueryField, GraphQLFunction
 from fastgraphql.scalars import GraphQLScalar
@@ -206,11 +205,7 @@ class FastGraphQL:
                     )
 
                 for name, injectable in graphql_type.injected_parameters.items():
-                    value = injectable()
-                    if inspect.isgenerator(value):
-                        resolved_kwargs[name] = next(value)
-                    else:
-                        resolved_kwargs[name] = value
+                    resolved_kwargs[name] = injectable(*args, **kwargs)
 
                 return_value = func(**resolved_kwargs)
                 if isinstance(return_value, BaseModel):
@@ -235,5 +230,11 @@ class FastGraphQL:
 
         return GraphQLQueryField(name=name)
 
-    def depends(self, dependency_provider: Callable[..., Any]) -> Any:
+    def depends_on(self, dependency_provider: Callable[..., Any]) -> Any:
         return InjectableFunction(dependency_provider)
+
+    def resolver_into(self) -> Any:
+        return InjectableContext()
+
+    def depends_on_type(self, python_type: Type[Any]) -> Any:
+        return InjectableType(python_type=python_type)

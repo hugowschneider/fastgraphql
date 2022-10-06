@@ -1,4 +1,4 @@
-from typing import Any, Callable, List, Optional, Tuple, Type, TypeVar, cast
+from typing import Any, Callable, List, Optional, Tuple, Type, TypeVar
 
 from sqlalchemy.exc import NoInspectionAvailable
 from sqlalchemy.sql.type_api import TypeEngine
@@ -28,15 +28,6 @@ CREATE_GRAPHQL_TYPE_SIGNATURE = Callable[
 ]
 
 
-def check_if_exists(python_type: Type[Any], as_input: bool) -> Optional[GraphQLType]:
-    if i := SelfGraphQL.introspect(python_type):
-        if as_input and (graphql_input := i.as_input):
-            return cast(GraphQLType, graphql_input)
-        elif not as_input and (graphql_type := i.as_type):
-            return cast(GraphQLType, graphql_type)
-    return None
-
-
 def adapt_sqlalchemy_graphql(
     python_type: Type[T],
     parse_type_func: CREATE_GRAPHQL_TYPE_SIGNATURE,
@@ -58,7 +49,9 @@ def adapt_sqlalchemy_graphql(
             f"{python_type.__qualname__} does not seems to be a SQLAlchemy Model\n{e}"
         )
 
-    if graphql_type := check_if_exists(python_type=python_type, as_input=as_input):
+    if graphql_type := SelfGraphQL.check_if_exists(
+        python_type=python_type, as_input=as_input
+    ):
         return graphql_type
 
     foreign_columns = []
