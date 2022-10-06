@@ -177,7 +177,7 @@ def create_dependency() -> str:
 @fast_graphql.query()
 def my_first_query(
         model: Model = fast_graphql.parameter(),
-        dependecy: str = fast_graphql.depends(create_dependency)
+        dependecy: str = fast_graphql.depends_on(create_dependency)
 ) -> str:
     ...
 

@@ -154,7 +154,7 @@ name = "graphql-core"
 version = "3.2.3"
 description = "GraphQL implementation for Python, a port of GraphQL.js, the JavaScript reference implementation for GraphQL."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.6,<4"
 
 [[package]]
@@ -467,7 +467,7 @@ sqlalchemy = ["SQLAlchemy"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "c76e83d75d51139661959585aa0af862b42cfda476ce80a539edd40b7d2f49b6"
+content-hash = "5d87981f0bba4309a497b3cf09e22897133edf34d440b8b7a4ffd0f1816ea9e8"
 
 [metadata.files]
 anyio = [

@@ -19,7 +19,7 @@ from pydantic.fields import ModelField
 from pydantic import BaseModel
 
 from fastgraphql.exceptions import GraphQLFactoryException
-from fastgraphql.injection import InjectableFunction
+from fastgraphql.injection import InjectableFunction, Injectable
 from fastgraphql.schema import (
     GraphQLSchema,
     SelfGraphQL,
@@ -201,11 +201,10 @@ class GraphQLTypeFactory:
         if not name:
             name = defaults(python_type.__name__)
 
-        if i := SelfGraphQL.introspect(python_type):
-            if self.input_factory and (graphql_input := i.as_input):
-                return graphql_input
-            elif not self.input_factory and (graphql_type := i.as_type):
-                return graphql_type
+        if graphql_type := SelfGraphQL.check_if_exists(
+            python_type=python_type, as_input=self.input_factory
+        ):
+            return graphql_type
 
         field: ModelField
         graphql_type = GraphQLType(
@@ -312,7 +311,7 @@ class GraphQLFunctionFactory:
                 graphql_query.add_parameter(
                     self.parameter_factory(definition, func, param_name, defaults)
                 )
-            elif isinstance(definition.default, InjectableFunction):
+            elif isinstance(definition.default, Injectable):
                 graphql_query.add_injected_parameter(
                     name=param_name,
                     injectable=self.dependency_injection_factory(definition.default),
@@ -350,16 +349,16 @@ class GraphQLFunctionFactory:
             func_parameter.set_name(defaults(param_name))
         return func_parameter
 
-    def dependency_injection_factory(
-        self, injectable_function: InjectableFunction
-    ) -> InjectableFunction:
-        assert injectable_function.callable
-        func_signature = inspect.signature(injectable_function.callable)
+    def dependency_injection_factory(self, injectable: Injectable) -> Injectable:
 
-        for param_name, definition in func_signature.parameters.items():
-            if isinstance(definition.default, InjectableFunction):
-                injectable_function.dependencies[
-                    param_name
-                ] = self.dependency_injection_factory(definition.default)
+        if isinstance(injectable, InjectableFunction):
+            assert injectable.callable
+            func_signature = inspect.signature(injectable.callable)
 
-        return injectable_function
+            for param_name, definition in func_signature.parameters.items():
+                if isinstance(definition.default, Injectable):
+                    injectable.dependencies[
+                        param_name
+                    ] = self.dependency_injection_factory(definition.default)
+
+        return injectable
