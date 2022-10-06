@@ -12,6 +12,7 @@ from fastgraphql.types import (
     GraphQLDataType,
     GraphQLArray,
 )
+from fastgraphql.utils import DefaultNames, DefaultUnchanged
 
 try:
     from sqlalchemy import ARRAY, Column
@@ -43,12 +44,13 @@ def adapt_sqlalchemy_graphql(
     name: Optional[str],
     exclude_model_attrs: Optional[List[str]],
     as_input: bool,
+    default_names: DefaultNames = DefaultUnchanged(),
 ) -> GraphQLType:
 
     if not exclude_model_attrs:
         exclude_model_attrs = []
     if not name:
-        name = str(python_type.__name__)
+        name = default_names(python_type.__name__)
     try:
         mapper = inspect(python_type)
     except NoInspectionAvailable as e:
@@ -72,7 +74,12 @@ def adapt_sqlalchemy_graphql(
             continue
 
         graphql_type.add_attribute(
-            adapt_column(column=column, parse_type_func=parse_type_func, schema=schema)
+            adapt_column(
+                column=column,
+                parse_type_func=parse_type_func,
+                schema=schema,
+                default_names=default_names,
+            )
         )
 
     adapt_relation(
@@ -82,11 +89,17 @@ def adapt_sqlalchemy_graphql(
         schema=schema,
         parse_type_func=parse_type_func,
         as_input=as_input,
+        default_names=default_names,
     )
 
     for column in foreign_columns:
         graphql_type.add_attribute(
-            adapt_column(column=column, parse_type_func=parse_type_func, schema=schema)
+            adapt_column(
+                column=column,
+                parse_type_func=parse_type_func,
+                schema=schema,
+                default_names=default_names,
+            )
         )
 
     SelfGraphQL.add_type_metadata(
@@ -107,13 +120,15 @@ def adapt_relation(
     schema: GraphQLSchema,
     parse_type_func: CREATE_GRAPHQL_TYPE_SIGNATURE,
     as_input: bool,
+    default_names: DefaultNames,
 ) -> None:
     relation: RelationshipProperty[Any]
     for relation in mapper.relationships:
         nullable = any(c.nullable for c in relation.local_columns)
         graphql_type.add_attribute(
             GraphQLTypeAttribute(
-                name=relation.key,
+                graphql_name=default_names(relation.key),
+                python_name=relation.key,
                 attr_type=adapt_sqlalchemy_graphql(
                     python_type=relation.mapper.entity,
                     schema=schema,
@@ -146,14 +161,20 @@ def adapt_column(
     column: Column[Any],
     parse_type_func: CREATE_GRAPHQL_TYPE_SIGNATURE,
     schema: GraphQLSchema,
+    default_names: DefaultNames,
 ) -> GraphQLTypeAttribute:
     graphql_type, nullable = parse_sql_type(
         sql_type=column.type, parse_type_func=parse_type_func
     )
     if isinstance(graphql_type, GraphQLScalar) and not graphql_type.default_scalar:
         schema.add_scalar(graphql_type)
+    if "graphql_name" in column.info:
+        graphql_name = column.info["graphql_name"]
+    else:
+        graphql_name = default_names(column.name)
 
     return GraphQLTypeAttribute(
-        name=column.name,
+        graphql_name=graphql_name,
+        python_name=column.name,
         attr_type=graphql_type.ref(nullable=column.nullable),
     )

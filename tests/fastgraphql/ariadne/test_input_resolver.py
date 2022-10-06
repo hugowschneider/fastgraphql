@@ -6,10 +6,11 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from fastgraphql import FastGraphQL
 from fastgraphql.fastapi import make_ariadne_fastapi_router
+from fastgraphql.utils import DefaultToCamelCase
 
 GRAPHQL_URL = "/graphql"
 JSON_CONTENT_TYPE_HEADER = {"Content-Type": "application/json"}
@@ -22,6 +23,27 @@ fast_graphql = FastGraphQL()
 class Model(BaseModel):
     t_int: int
     t_date: datetime
+
+
+@fast_graphql.type()
+@fast_graphql.input(name="NestedModelInput")
+class NestedModel(BaseModel):
+    model: Model
+
+
+@fast_graphql.type()
+@fast_graphql.input(name="ModelCustomFieldInput")
+class ModelCustomField(BaseModel):
+    t_int: int = Field(graphql_name="typeInt")
+    t_date: datetime = Field(graphql_name="typeDateTime")
+
+
+@fast_graphql.type()
+@fast_graphql.input(name="NestedModelCustomFieldInput")
+class NestedModelCustomField(BaseModel):
+    t_int: int = Field(graphql_name="typeInt")
+    model_custom_field: ModelCustomField = Field(graphql_name="modelCustomField")
+    t_str: str
 
 
 @fast_graphql.query()
@@ -64,6 +86,45 @@ def model_query(model: Model = fast_graphql.parameter()) -> Model:
     return model
 
 
+@fast_graphql.query()
+def nested_model_query(model: NestedModel = fast_graphql.parameter()) -> NestedModel:
+    setattr(nested_model_query, "__called__", True)
+    setattr(nested_model_query, "__parameters__", {"model": model})
+    return model
+
+
+@fast_graphql.query()
+def model_custom_field_query(
+    model: ModelCustomField = fast_graphql.parameter(),
+) -> ModelCustomField:
+    setattr(model_custom_field_query, "__called__", True)
+    setattr(model_custom_field_query, "__parameters__", {"model": model})
+    return model
+
+
+@fast_graphql.query()
+def nested_model_custom_field_query(
+    model: NestedModelCustomField = fast_graphql.parameter(),
+) -> NestedModelCustomField:
+    setattr(nested_model_custom_field_query, "__called__", True)
+    setattr(nested_model_custom_field_query, "__parameters__", {"model": model})
+    return model
+
+
+@fast_graphql.query()
+def query_custom_param_name(t_int: int = fast_graphql.parameter(name="typeInt")) -> int:
+    setattr(query_custom_param_name, "__called__", True)
+    setattr(query_custom_param_name, "__parameters__", {"t_int": t_int})
+    return t_int
+
+
+@fast_graphql.query(default_names=DefaultToCamelCase())
+def query_camel_case(t_int: int = fast_graphql.parameter()) -> int:
+    setattr(query_camel_case, "__called__", True)
+    setattr(query_camel_case, "__parameters__", {"t_int": t_int})
+    return t_int
+
+
 @pytest.fixture(scope="class", autouse=True)
 def fastapi_test(request: Any) -> None:
 
@@ -81,7 +142,7 @@ class TestInputResolversWithAriadneFastAPIIntegration:
 
     def test_graphql_simple_input_resolver_with_nones(self) -> None:
         query = """
-query StdTypeQuery(
+query Query(
             $t_int: Int!,
             $t_opt_int: Int,
             $t_str: String!,
@@ -161,7 +222,7 @@ query StdTypeQuery(
 
     def test_graphql_simple_input_resolver_without_nones(self) -> None:
         query = """
-query StdTypeQuery(
+query Query(
             $t_int: Int!,
             $t_opt_int: Int,
             $t_str: String!,
@@ -240,17 +301,17 @@ query StdTypeQuery(
 
     def test_graphql_model_input_resolver(self) -> None:
         query = """
-query StdTypeQuery(
-            $model: ModelInput!
-){
-    model_query(
-            model: $model,
-    ) {
-        t_int
-        t_date
-    }
-}
-        """.strip()
+      query Query(
+                  $model: ModelInput!
+      ){
+          model_query(
+                  model: $model,
+          ) {
+              t_int
+              t_date
+          }
+      }
+              """.strip()
         model = Model(
             t_int=1,
             t_date=datetime(
@@ -283,3 +344,236 @@ query StdTypeQuery(
         assert parameters
         assert isinstance(parameters["model"], Model)
         assert parameters == variables
+
+    def test_graphql_nested_model_input_resolver(self) -> None:
+        query = """
+query Query(
+            $model: NestedModelInput!
+){
+    nested_model_query(
+            model: $model,
+    ) {
+        model {
+            t_int
+            t_date        
+        }
+    }
+}
+        """.strip()
+        model = NestedModel(
+            model=Model(
+                t_int=1,
+                t_date=datetime(
+                    year=2022,
+                    month=10,
+                    day=1,
+                    hour=8,
+                    minute=25,
+                    second=11,
+                    microsecond=0,
+                    tzinfo=timezone(timedelta(hours=-2)),
+                ),
+            )
+        )
+        variables = {"model": model.dict()}
+        response = self.test_client.post(
+            GRAPHQL_URL,
+            data=json.dumps(
+                {"query": query, "variables": variables},
+                default=lambda x: x.isoformat(),
+            ),
+            headers=JSON_CONTENT_TYPE_HEADER,
+        )
+
+        assert response.status_code == 200, response.json()
+        assert "errors" not in response.json(), response.json()
+        assert "data" in response.json(), response.json()
+        assert "nested_model_query" in response.json()["data"], response.json()
+        assert hasattr(nested_model_query, "__called__") and getattr(
+            nested_model_query, "__called__"
+        )
+        parameters = getattr(nested_model_query, "__parameters__")
+        assert parameters
+        assert isinstance(parameters["model"], NestedModel)
+        assert isinstance(parameters["model"].model, Model)
+        assert parameters == variables
+
+    def test_graphql_model_with_custom_field_name(self) -> None:
+        query = """
+query Query(
+            $model: ModelCustomFieldInput!
+){
+    model_custom_field_query(
+            model: $model,
+    ) {
+        typeInt
+        typeDateTime
+    }
+}
+        """.strip()
+
+        variables = {
+            "model": {
+                "typeInt": 1,
+                "typeDateTime": datetime(
+                    year=2022,
+                    month=10,
+                    day=1,
+                    hour=8,
+                    minute=25,
+                    second=11,
+                    microsecond=0,
+                    tzinfo=timezone(timedelta(hours=-2)),
+                ),
+            }
+        }
+        response = self.test_client.post(
+            GRAPHQL_URL,
+            data=json.dumps(
+                {"query": query, "variables": variables},
+                default=lambda x: x.isoformat(),
+            ),
+            headers=JSON_CONTENT_TYPE_HEADER,
+        )
+
+        assert response.status_code == 200, response.json()
+        assert "errors" not in response.json(), response.json()
+        assert "data" in response.json(), response.json()
+        assert "model_custom_field_query" in response.json()["data"], response.json()
+        assert hasattr(model_custom_field_query, "__called__") and getattr(
+            model_custom_field_query, "__called__"
+        )
+        parameters = getattr(model_custom_field_query, "__parameters__")
+        assert parameters
+        assert isinstance(parameters["model"], ModelCustomField)
+        assert parameters["model"].t_int == variables["model"]["typeInt"]
+        assert parameters["model"].t_date == variables["model"]["typeDateTime"]
+
+    def test_graphql_nested_model_with_custom_field_name(self) -> None:
+
+        query = """
+query Query(
+            $model: NestedModelCustomFieldInput!
+){
+    nested_model_custom_field_query(
+            model: $model,
+    ) {
+        typeInt
+        modelCustomField {
+            typeInt
+        }
+        t_str
+    }
+}
+        """.strip()
+
+        variables = {
+            "model": {
+                "typeInt": 1,
+                "t_str": "asd",
+                "modelCustomField": {
+                    "typeInt": 1,
+                    "typeDateTime": datetime(
+                        year=2022,
+                        month=10,
+                        day=1,
+                        hour=8,
+                        minute=25,
+                        second=11,
+                        microsecond=0,
+                        tzinfo=timezone(timedelta(hours=-2)),
+                    ),
+                },
+            }
+        }
+        response = self.test_client.post(
+            GRAPHQL_URL,
+            data=json.dumps(
+                {"query": query, "variables": variables},
+                default=lambda x: x.isoformat(),
+            ),
+            headers=JSON_CONTENT_TYPE_HEADER,
+        )
+
+        assert response.status_code == 200, response.json()
+        assert "errors" not in response.json(), response.json()
+        assert "data" in response.json(), response.json()
+        assert (
+            "nested_model_custom_field_query" in response.json()["data"]
+        ), response.json()
+        assert hasattr(nested_model_custom_field_query, "__called__") and getattr(
+            nested_model_custom_field_query, "__called__"
+        )
+        parameters = getattr(nested_model_custom_field_query, "__parameters__")
+        assert parameters
+        assert isinstance(parameters["model"], NestedModelCustomField)
+        assert isinstance(parameters["model"].model_custom_field, ModelCustomField)
+        assert parameters["model"].t_int == variables["model"]["typeInt"]
+
+    def test_query_custom_param_name(self) -> None:
+        query = """
+query Query(
+            $typeInt: Int!,
+){
+    query_custom_param_name(
+            typeInt: $typeInt, 
+    )
+}
+        """.strip()
+
+        variables = {
+            "typeInt": 911,
+        }
+        response = self.test_client.post(
+            GRAPHQL_URL,
+            data=json.dumps(
+                {"query": query, "variables": variables},
+                default=lambda x: x.isoformat(),
+            ),
+            headers=JSON_CONTENT_TYPE_HEADER,
+        )
+        assert response.status_code == 200, response.json()
+        assert "errors" not in response.json(), response.json()
+        assert "data" in response.json(), response.json()
+        assert "query_custom_param_name" in response.json()["data"]
+        assert hasattr(query_custom_param_name, "__called__") and getattr(
+            query_custom_param_name, "__called__"
+        )
+        parameters = getattr(query_custom_param_name, "__parameters__")
+        assert parameters
+        assert isinstance(parameters["t_int"], int)
+        assert parameters["t_int"] == variables["typeInt"]
+
+    def test_query_camel_case(self) -> None:
+        query = """
+query Query(
+            $tInt: Int!,
+){
+    queryCamelCase(
+            tInt: $tInt, 
+    )
+}
+        """.strip()
+
+        variables = {
+            "tInt": 911,
+        }
+        response = self.test_client.post(
+            GRAPHQL_URL,
+            data=json.dumps(
+                {"query": query, "variables": variables},
+                default=lambda x: x.isoformat(),
+            ),
+            headers=JSON_CONTENT_TYPE_HEADER,
+        )
+        assert response.status_code == 200, response.json()
+        assert "errors" not in response.json(), response.json()
+        assert "data" in response.json(), response.json()
+        assert "queryCamelCase" in response.json()["data"]
+        assert hasattr(query_camel_case, "__called__") and getattr(
+            query_camel_case, "__called__"
+        )
+        parameters = getattr(query_camel_case, "__parameters__")
+        assert parameters
+        assert isinstance(parameters["t_int"], int)
+        assert parameters["t_int"] == variables["tInt"]

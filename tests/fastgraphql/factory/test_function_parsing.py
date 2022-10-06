@@ -9,14 +9,19 @@ from fastgraphql.schema import GraphQLSchema
 @pytest.fixture(scope="function")
 def type_factory() -> GraphQLTypeFactory:
     return GraphQLTypeFactory(
-        schema=GraphQLSchema(), date_formats=_DateFormats("", "", "")
+        schema=GraphQLSchema(),
+        date_formats=_DateFormats("", "", ""),
+        default_names=None,
     )
 
 
 @pytest.fixture(scope="function")
 def function_factory(type_factory: GraphQLTypeFactory) -> GraphQLFunctionFactory:
     return GraphQLFunctionFactory(
-        schema=GraphQLSchema(), type_factory=type_factory, input_factory=type_factory
+        schema=GraphQLSchema(),
+        type_factory=type_factory,
+        input_factory=type_factory,
+        default_names=None,
     )
 
 

@@ -14,6 +14,7 @@ from typing import (
     Any,
     Tuple,
     Dict,
+    cast,
 )
 from pydantic import BaseModel
 
@@ -21,15 +22,16 @@ from fastgraphql.injection import InjectableFunction
 from fastgraphql.schema import GraphQLSchema
 from fastgraphql.types import GraphQLType, GraphQLQueryField, GraphQLFunction
 from fastgraphql.scalars import GraphQLScalar
+from fastgraphql.utils import DefaultNames
 
 T = TypeVar("T", bound=BaseModel)
 T_ANY = TypeVar("T_ANY")
 
 
 class FastGraphQL:
-    def __init__(self) -> None:
+    def __init__(self, default_names: Optional[DefaultNames] = None) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
-
+        self.default_names = default_names
         time_format = "%H:%M:%S"
         date_format = "%Y-%m-%d"
         self._date_formats = _DateFormats(
@@ -39,22 +41,30 @@ class FastGraphQL:
         )
         self.schema = GraphQLSchema()
         self.type_factory = GraphQLTypeFactory(
-            schema=self.schema, input_factory=False, date_formats=self._date_formats
+            schema=self.schema,
+            input_factory=False,
+            date_formats=self._date_formats,
+            default_names=default_names,
         )
         self.input_factory = GraphQLTypeFactory(
-            schema=self.schema, input_factory=True, date_formats=self._date_formats
+            schema=self.schema,
+            input_factory=True,
+            date_formats=self._date_formats,
+            default_names=default_names,
         )
         self.query_factory = GraphQLFunctionFactory(
             schema=self.schema,
             mutation_factory=False,
             input_factory=self.input_factory,
             type_factory=self.type_factory,
+            default_names=default_names,
         )
         self.mutation_factory = GraphQLFunctionFactory(
             schema=self.schema,
             mutation_factory=True,
             input_factory=self.input_factory,
             type_factory=self.type_factory,
+            default_names=default_names,
         )
 
     def get_date_format(self) -> str:
@@ -87,6 +97,7 @@ class FastGraphQL:
         exclude_model_attrs: Optional[List[str]],
         name: Optional[str],
         as_input: bool,
+        default_names: Optional[DefaultNames],
     ) -> Callable[..., Type[T]]:
         if exclude_model_attrs is None:
             exclude_model_attrs = []
@@ -104,6 +115,7 @@ class FastGraphQL:
                 python_type=python_type,
                 name=name,
                 exclude_model_attrs=exclude_model_attrs,
+                default_names=default_names,
             )
             if not isinstance(graphql_type, GraphQLType):  # pragma: no cover
                 raise GraphQLRunTimeError("Something went wrong")
@@ -116,36 +128,51 @@ class FastGraphQL:
         self,
         exclude_model_attrs: Optional[List[str]] = None,
         name: Optional[str] = None,
+        default_names: Optional[DefaultNames] = None,
     ) -> Callable[..., Type[T]]:
         return self._graphql_model(
-            exclude_model_attrs=exclude_model_attrs, name=name, as_input=False
+            exclude_model_attrs=exclude_model_attrs,
+            name=name,
+            as_input=False,
+            default_names=default_names,
         )
 
     def input(
         self,
         exclude_model_attrs: Optional[List[str]] = None,
+        default_names: Optional[DefaultNames] = None,
         name: Optional[str] = None,
     ) -> Callable[..., Type[T]]:
         return self._graphql_model(
-            exclude_model_attrs=exclude_model_attrs, name=name, as_input=True
+            exclude_model_attrs=exclude_model_attrs,
+            name=name,
+            as_input=True,
+            default_names=default_names,
         )
 
     def query(
         self,
         name: Optional[str] = None,
+        default_names: Optional[DefaultNames] = None,
     ) -> Callable[..., Callable[..., T_ANY]]:
-        return self._graphql_function(name=name, as_mutation=False)
+        return self._graphql_function(
+            name=name, as_mutation=False, default_names=default_names
+        )
 
     def mutation(
         self,
         name: Optional[str] = None,
+        default_names: Optional[DefaultNames] = None,
     ) -> Callable[..., Callable[..., T_ANY]]:
-        return self._graphql_function(name=name, as_mutation=True)
+        return self._graphql_function(
+            name=name, as_mutation=True, default_names=default_names
+        )
 
     def _graphql_function(
         self,
         name: Optional[str],
         as_mutation: bool,
+        default_names: Optional[DefaultNames],
     ) -> Callable[..., Callable[..., T_ANY]]:
         def decorator(func: Callable[..., T_ANY]) -> Callable[..., T_ANY]:
             self.logger.info(
@@ -153,11 +180,13 @@ class FastGraphQL:
             )
             if as_mutation:
                 graphql_type = self.mutation_factory.create_function(
-                    func=func, name=name
+                    func=func, name=name, default_names=default_names
                 )
                 self.schema.add_mutation(graphql_type)
             else:
-                graphql_type = self.query_factory.create_function(func=func, name=name)
+                graphql_type = self.query_factory.create_function(
+                    func=func, name=name, default_names=default_names
+                )
                 self.schema.add_query(graphql_type)
 
             if not isinstance(graphql_type, GraphQLFunction):  # pragma: no cover
@@ -183,7 +212,11 @@ class FastGraphQL:
                     else:
                         resolved_kwargs[name] = value
 
-                return func(**resolved_kwargs)
+                return_value = func(**resolved_kwargs)
+                if isinstance(return_value, BaseModel):
+                    return cast(T_ANY, graphql_type.map_to_output(return_value.dict()))
+                else:
+                    return return_value
 
             graphql_type.resolver = _decorator
 

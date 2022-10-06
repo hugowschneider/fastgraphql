@@ -1,7 +1,30 @@
 import os
-from typing import Optional
+from typing import Callable, Optional
 
 FAST_GRAPHQL_DEBUG = "FAST_GRAPHQL_DEBUG"
+
+
+def to_camel_case(snake_str: str) -> str:
+    components = snake_str.split("_")
+    return components[0] + "".join(x.title() for x in components[1:])
+
+
+class DefaultNames:
+    def __init__(self, convert_func: Callable[[str], str]) -> None:
+        self.conver_func = convert_func
+
+    def __call__(self, name: str) -> str:
+        return self.conver_func(name)
+
+
+class DefaultUnchanged(DefaultNames):
+    def __init__(self) -> None:
+        super().__init__(convert_func=str)
+
+
+class DefaultToCamelCase(DefaultNames):
+    def __init__(self) -> None:
+        super().__init__(convert_func=to_camel_case)
 
 
 class MutableString:

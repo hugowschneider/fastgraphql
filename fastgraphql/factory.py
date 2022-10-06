@@ -42,7 +42,7 @@ from fastgraphql.scalars import (
     GraphQLDate,
     GraphQLTime,
 )
-from fastgraphql.utils import MutableString
+from fastgraphql.utils import MutableString, DefaultNames, DefaultUnchanged
 
 T = TypeVar("T", bound=BaseModel)
 T_ANY = TypeVar("T_ANY")
@@ -67,9 +67,11 @@ class GraphQLTypeFactory:
         self,
         schema: GraphQLSchema,
         date_formats: _DateFormats,
+        default_names: Optional[DefaultNames],
         input_factory: bool = False,
     ) -> None:
         self.schema = schema
+        self.default_names = default_names
         self.input_factory = input_factory
         self.date_formats = date_formats
         self.sqlalchemy_base: Optional[Type[Any]] = None
@@ -94,6 +96,7 @@ class GraphQLTypeFactory:
     def create_graphql_type(
         self,
         python_type: Type[Any],
+        default_names: Optional[DefaultNames] = None,
         exclude_model_attrs: Optional[List[str]] = None,
         name: Optional[str] = None,
     ) -> Tuple[GraphQLDataType, bool]:
@@ -106,6 +109,7 @@ class GraphQLTypeFactory:
                     python_type=python_type,
                     name=name,
                     exclude_model_attrs=exclude_model_attrs,
+                    default_names=default_names,
                 ),
                 False,
             )
@@ -115,6 +119,13 @@ class GraphQLTypeFactory:
                 python_type=python_type,
                 name=name,
                 exclude_model_attrs=exclude_model_attrs,
+                default_names=next(
+                    (
+                        d
+                        for d in [default_names, self.default_names, DefaultUnchanged()]
+                        if d is not None
+                    )
+                ),
             )
         if issubclass(python_type, str):
             return GraphQLString(), False
@@ -140,6 +151,7 @@ class GraphQLTypeFactory:
         python_type: Type[T],
         name: Optional[str],
         exclude_model_attrs: Optional[List[str]],
+        default_names: DefaultNames,
     ) -> Tuple[GraphQLDataType, bool]:
         from fastgraphql.sqlalchemy import adapt_sqlalchemy_graphql
 
@@ -162,6 +174,7 @@ class GraphQLTypeFactory:
                 exclude_model_attrs=exclude_model_attrs,
                 parse_type_func=parse_function,
                 as_input=self.input_factory,
+                default_names=default_names,
             ),
             False,
         )
@@ -171,13 +184,22 @@ class GraphQLTypeFactory:
         python_type: Type[T],
         name: Optional[str] = None,
         exclude_model_attrs: Optional[List[str]] = None,
+        default_names: Optional[DefaultNames] = None,
     ) -> GraphQLDataType:
+
+        defaults = next(
+            (
+                d
+                for d in [default_names, self.default_names, DefaultUnchanged()]
+                if d is not None
+            )
+        )
 
         if exclude_model_attrs is None:
             exclude_model_attrs = []
 
         if not name:
-            name = str(python_type.__name__)
+            name = defaults(python_type.__name__)
 
         if i := SelfGraphQL.introspect(python_type):
             if self.input_factory and (graphql_input := i.as_input):
@@ -194,9 +216,15 @@ class GraphQLTypeFactory:
                 continue
             graphql_attr_type, nullable = self.model_field_factory(field)
 
+            if "graphql_name" in field.field_info.extra:
+                field_name = field.field_info.extra["graphql_name"]
+            else:
+                field_name = defaults(field.name)
+
             graphql_type.add_attribute(
                 GraphQLTypeAttribute(
-                    name=field.name,
+                    graphql_name=field_name,
+                    python_name=field.name,
                     attr_type=graphql_attr_type.ref(
                         nullable=field.allow_none or nullable
                     ),
@@ -237,18 +265,32 @@ class GraphQLFunctionFactory:
         schema: GraphQLSchema,
         type_factory: GraphQLTypeFactory,
         input_factory: GraphQLTypeFactory,
+        default_names: Optional[DefaultNames],
         mutation_factory: bool = False,
     ) -> None:
         self.schema = schema
+        self.default_names = default_names
         self.mutation_factory = mutation_factory
         self.input_factory = input_factory
         self.type_factory = type_factory
 
     def create_function(
-        self, func: Callable[..., T_ANY], name: Optional[str] = None
+        self,
+        func: Callable[..., T_ANY],
+        name: Optional[str] = None,
+        default_names: Optional[DefaultNames] = None,
     ) -> GraphQLFunction:
+
+        defaults = next(
+            (
+                d
+                for d in [default_names, self.default_names, DefaultUnchanged()]
+                if d is not None
+            )
+        )
+
         if not name:
-            name = str(func.__name__)
+            name = defaults(func.__name__)
         func_signature = inspect.signature(func)
 
         if func_signature.return_annotation == inspect.Parameter.empty:
@@ -268,7 +310,7 @@ class GraphQLFunctionFactory:
         for param_name, definition in func_signature.parameters.items():
             if isinstance(definition.default, GraphQLFunctionField):
                 graphql_query.add_parameter(
-                    self.parameter_factory(definition, func, param_name)
+                    self.parameter_factory(definition, func, param_name, defaults)
                 )
             elif isinstance(definition.default, InjectableFunction):
                 graphql_query.add_injected_parameter(
@@ -282,7 +324,11 @@ class GraphQLFunctionFactory:
         return graphql_query
 
     def parameter_factory(
-        self, definition: Parameter, func: Callable[..., Any], param_name: str
+        self,
+        definition: Parameter,
+        func: Callable[..., Any],
+        param_name: str,
+        defaults: DefaultNames,
     ) -> GraphQLFunctionField:
         func_parameter: GraphQLFunctionField = definition.default
         func_parameter.set_python_name(param_name)
@@ -301,7 +347,7 @@ class GraphQLFunctionFactory:
         if isinstance(graphql_type, GraphQLType):
             func_parameter.python_type = graphql_type.python_type
         if not func_parameter.name:
-            func_parameter.set_name(param_name)
+            func_parameter.set_name(defaults(param_name))
         return func_parameter
 
     def dependency_injection_factory(
