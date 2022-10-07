@@ -1,5 +1,5 @@
 import inspect
-from typing import Any, Callable, Dict, Optional, Tuple, Type
+from typing import Any, Callable, Dict, Optional, Tuple, Type, Union, Literal
 from graphql import GraphQLResolveInfo
 
 
@@ -35,13 +35,34 @@ class InjectableRequestType(Injectable):
 
 
 class InjectableFunction(Injectable):
-    def __init__(self, callable: Optional[Callable[..., Any]] = None):
+    def __init__(
+        self,
+        callable: Optional[Callable[..., Any]],
+        parameters: Union[bool, Dict[str, str], Literal["*"]] = False,
+    ):
         self.callable = callable
         self.dependencies: Dict[str, Callable[..., Any]] = {}
+        self.parameters = parameters
+
+    def resolve_path(self, path: str, kwargs: Dict[str, Any]) -> Any:
+        steps = path.split(".")
+        value: Any = kwargs
+        for step in steps:
+            value = dict(value)[step]
+
+        return value
 
     def __call__(self, *args: Tuple[Any], **kwargs: Dict[str, Any]) -> Any:
         if c := self.callable:
-            resolved_kwargs = {}
+            if self.parameters is True or self.parameters == "*":
+                resolved_kwargs = kwargs
+            else:
+                resolved_kwargs = {}
+
+            if isinstance(self.parameters, Dict):
+                for key, value in self.parameters.items():
+                    resolved_kwargs[value] = self.resolve_path(key, kwargs)
+
             for name, dependency in self.dependencies.items():
                 resolved_kwargs[name] = dependency(*args, **kwargs)
             value = c(**resolved_kwargs)
