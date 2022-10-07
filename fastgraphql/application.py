@@ -14,6 +14,8 @@ from typing import (
     Tuple,
     Dict,
     cast,
+    Union,
+    Literal,
 )
 from pydantic import BaseModel
 
@@ -193,21 +195,24 @@ class FastGraphQL:
 
             @functools.wraps(func)
             def _decorator(*args: Tuple[Any], **kwargs: Dict[str, Any]) -> T_ANY:
-                resolved_kwargs: Dict[str, Any] = {}
+                parameters_kwargs: Dict[str, Any] = {}
                 for parameter in graphql_type.parameters:
                     python_name = parameter.python_name
                     name = parameter.name
                     assert python_name
                     assert name
                     value = kwargs[name]
-                    resolved_kwargs[python_name] = (
+                    parameters_kwargs[python_name] = (
                         parameter(**value) if parameter.is_callable() else value
                     )
 
+                injected_kwargs: Dict[str, Any] = {}
                 for name, injectable in graphql_type.injected_parameters.items():
-                    resolved_kwargs[name] = injectable(*args, **kwargs)
+                    injected_kwargs[name] = injectable(
+                        *args, **{**kwargs, **parameters_kwargs}
+                    )
 
-                return_value = func(**resolved_kwargs)
+                return_value = func(**{**injected_kwargs, **parameters_kwargs})
                 if isinstance(return_value, BaseModel):
                     return cast(T_ANY, graphql_type.map_to_output(return_value.dict()))
                 else:
@@ -230,8 +235,12 @@ class FastGraphQL:
 
         return GraphQLQueryField(name=name)
 
-    def depends_on(self, dependency_provider: Callable[..., Any]) -> Any:
-        return InjectableFunction(dependency_provider)
+    def depends_on(
+        self,
+        dependency_provider: Callable[..., Any],
+        parameters: Union[bool, Dict[str, str], Literal["*"]] = False,
+    ) -> Any:
+        return InjectableFunction(dependency_provider, parameters)
 
     def resolver_into(self) -> Any:
         return InjectableContext()
