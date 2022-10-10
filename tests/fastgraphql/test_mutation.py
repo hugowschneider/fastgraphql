@@ -181,6 +181,10 @@ type Mutation {{
         def sample_mutation() -> Model:
             return Model()  # pragma: no cover
 
+        @fast_graphql.mutation()
+        def sample_mutation2() -> Model:
+            return Model()  # pragma: no cover
+
         expected_query_definition = """
 sample_mutation: Model!        
         """.strip()
@@ -192,6 +196,7 @@ type Model {{
 
 type Mutation {{
     {expected_query_definition}
+    sample_mutation2: Model!
 }}""".strip()
 
         self_graphql = SelfGraphQL.introspect(sample_mutation)

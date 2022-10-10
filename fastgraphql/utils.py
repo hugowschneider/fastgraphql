@@ -2,6 +2,7 @@ import os
 from typing import Callable, Optional
 
 FAST_GRAPHQL_DEBUG = "FAST_GRAPHQL_DEBUG"
+DEFAULT_TAB = "    "
 
 
 def to_camel_case(snake_str: str) -> str:
