@@ -1,6 +1,7 @@
 from typing import Any, Callable, List, Optional, Type, TypeVar, Dict
 
 from fastgraphql.injection import Injectable, InjectableRequestType
+from fastgraphql.utils import DEFAULT_TAB
 
 T_ANY = TypeVar("T_ANY")
 T = TypeVar("T")
@@ -87,7 +88,7 @@ class GraphQLType(GraphQLDataType):
         return mapped_kwargs
 
     def render(self) -> str:
-        separator = "\n    "
+        separator = f"\n{DEFAULT_TAB}"
         decl = "input" if self.as_input else "type"
         return f"""
 {decl} {self.name} {{

@@ -15,6 +15,7 @@ from typing import (
 from fastgraphql.exceptions import GraphQLSchemaException
 from fastgraphql.scalars import GraphQLScalar
 from fastgraphql.types import GraphQLType, GraphQLFunction
+from fastgraphql.utils import DEFAULT_TAB
 
 T = TypeVar("T")
 
@@ -82,7 +83,7 @@ class GraphQLSchema:
                 return ""
             decl = "Mutation" if as_mutation else "Query"
             sorted_types = sorted(functions, key=lambda x: x.name)
-            queries_str = "\n\t".join([s.render() for s in sorted_types])
+            queries_str = f"\n{DEFAULT_TAB}".join([s.render() for s in sorted_types])
             return f"""
 type {decl} {{
     {queries_str}
