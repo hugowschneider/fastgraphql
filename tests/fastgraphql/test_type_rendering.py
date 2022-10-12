@@ -247,7 +247,7 @@ type ModelWithGenericTypes {
 
         @fast_graphql.type()
         class ModelWithId(BaseModel):
-            t_id: str = Field(..., graphql_scalar=GraphQLID())
+            t_id: str = Field(..., graphql_type=GraphQLID())
 
         expected_graphql_def = """
 type ModelWithId {
@@ -286,7 +286,7 @@ type ChildModel {
 
         @fast_graphql.type()
         class ModelWithId(BaseModel):
-            t_id: str = Field(..., graphql_scalar=GraphQLScalar("CustomScalar"))
+            t_id: str = Field(..., graphql_type=GraphQLScalar("CustomScalar"))
 
         expected_scalar_def = """
 scalar CustomScalar        

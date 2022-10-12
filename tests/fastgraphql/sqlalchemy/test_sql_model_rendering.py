@@ -17,6 +17,7 @@ from fastgraphql import FastGraphQL
 from sqlalchemy.ext.declarative import declarative_base
 
 from fastgraphql.exceptions import GraphQLFactoryException
+from fastgraphql.scalars import GraphQLID
 from fastgraphql.schema import SelfGraphQL, GraphQLSchema
 from fastgraphql.sqlalchemy import adapt_sqlalchemy_graphql
 from fastgraphql.types import GraphQLDataType
@@ -324,6 +325,29 @@ type Model {
         expected_graphql_def = """
 type Model {
     primaryKey: Int!
+} 
+            """.strip()
+        self_graphql = SelfGraphQL.introspect(Model)
+        assert self_graphql
+        assert self_graphql.as_type
+
+        assert self_graphql.as_type.render() == expected_graphql_def
+
+    def test_type_with_custom_type(self) -> None:
+        fast_graphql = FastGraphQL(default_names=DefaultToCamelCase())
+        Base = declarative_base()  # type: Any # NOSONAR
+        fast_graphql.set_sqlalchemy_base(Base)
+
+        @fast_graphql.type()
+        class Model(Base):
+            __tablename__ = "test1"
+            primary_key = Column(
+                Integer, primary_key=True, info={"graphql_type": GraphQLID()}
+            )
+
+        expected_graphql_def = """
+type Model {
+    primaryKey: ID!
 } 
             """.strip()
         self_graphql = SelfGraphQL.introspect(Model)

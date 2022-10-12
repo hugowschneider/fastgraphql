@@ -173,6 +173,9 @@ def adapt_column(
     else:
         graphql_name = default_names(column.name)
 
+    if "graphql_type" in column.info:
+        graphql_type = column.info["graphql_type"]
+
     return GraphQLTypeAttribute(
         graphql_name=graphql_name,
         python_name=column.name,

@@ -249,7 +249,7 @@ input ModelWithGenericTypes {
 
         @fast_graphql.input()
         class ModelWithId(BaseModel):
-            t_id: str = Field(..., graphql_scalar=GraphQLID())
+            t_id: str = Field(..., graphql_type=GraphQLID())
 
         expected_graphql_def = """
 input ModelWithId {
