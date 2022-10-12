@@ -1,6 +1,8 @@
+import logging
 from typing import Any, Callable, List, Optional, Tuple, Type, TypeVar
 
 from sqlalchemy.exc import NoInspectionAvailable
+from sqlalchemy.sql.elements import Label
 from sqlalchemy.sql.type_api import TypeEngine
 
 from fastgraphql.exceptions import GraphQLFactoryException
@@ -26,6 +28,8 @@ T = TypeVar("T")
 CREATE_GRAPHQL_TYPE_SIGNATURE = Callable[
     [Type[Any], Optional[List[str]], Optional[str]], Tuple[GraphQLDataType, bool]
 ]
+
+logger = logging.getLogger(__name__)
 
 
 def adapt_sqlalchemy_graphql(
@@ -59,6 +63,9 @@ def adapt_sqlalchemy_graphql(
     graphql_type = GraphQLType(name=name, as_input=as_input, python_type=python_type)
 
     for column in mapper.columns:
+        if isinstance(column, Label):
+            logger.warning("SQLAlchemy query_expressions are not supported, yet...")
+            continue
         if column.name in exclude_model_attrs:
             continue
 
