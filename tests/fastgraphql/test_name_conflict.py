@@ -47,7 +47,7 @@ class TestNameConflict:
 
             @fast_graphql.type()
             class Model1(BaseModel):
-                t_int: str = Field(..., graphql_scalar=GraphQLScalar("Model1"))
+                t_int: str = Field(..., graphql_type=GraphQLScalar("Model1"))
 
     def test_name_conflict(self) -> None:
         fast_graphql = FastGraphQL()

@@ -242,9 +242,9 @@ class GraphQLTypeFactory:
         return graphql_type
 
     def model_field_factory(self, field: ModelField) -> Tuple[GraphQLDataType, bool]:
-        if "graphql_scalar" in field.field_info.extra:
+        if "graphql_type" in field.field_info.extra:
             graphql_attr_type, nullable = (
-                field.field_info.extra["graphql_scalar"],
+                field.field_info.extra["graphql_type"],
                 field.allow_none,
             )
         else:
