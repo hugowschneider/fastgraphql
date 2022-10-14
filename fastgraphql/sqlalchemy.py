@@ -1,25 +1,26 @@
 import logging
-from typing import Any, Callable, List, Optional, Tuple, Type, TypeVar
 
-from sqlalchemy.exc import NoInspectionAvailable
-from sqlalchemy.sql.elements import Label
-from sqlalchemy.sql.type_api import TypeEngine
+from typing import Any, Callable, List, Optional, Tuple, Type, TypeVar
 
 from fastgraphql.exceptions import GraphQLFactoryException
 from fastgraphql.scalars import GraphQLScalar
-from fastgraphql.schema import SelfGraphQL, GraphQLSchema
+from fastgraphql.schema import GraphQLSchema, SelfGraphQL
 from fastgraphql.types import (
+    GraphQLArray,
+    GraphQLDataType,
     GraphQLType,
     GraphQLTypeAttribute,
-    GraphQLDataType,
-    GraphQLArray,
 )
 from fastgraphql.utils import DefaultNames, DefaultUnchanged
 
 try:
     from sqlalchemy import ARRAY, Column
+    from sqlalchemy.exc import NoInspectionAvailable
     from sqlalchemy.inspection import inspect as inspect
-    from sqlalchemy.orm import RelationshipProperty, Mapper
+    from sqlalchemy.orm import Mapper, RelationshipProperty
+    from sqlalchemy.sql.elements import Label
+    from sqlalchemy.sql.type_api import TypeEngine
+
 except ImportError as e:  # pragma: no cover
     raise ImportError(f"{e}.\nPlease use `pip install fastgraphql[sqlalchemy]`")
 

@@ -1,24 +1,24 @@
-from typing import Any, Type, Tuple, Optional, List, cast
+from typing import Any, List, Optional, Tuple, Type, cast
 
 import pytest
+
 from sqlalchemy import (
+    ARRAY,
     Boolean,
     Column,
     DateTime,
     Float,
+    ForeignKey,
     Integer,
     String,
-    ForeignKey,
-    ARRAY,
 )
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 from fastgraphql import FastGraphQL
-from sqlalchemy.ext.declarative import declarative_base
-
 from fastgraphql.exceptions import GraphQLFactoryException
 from fastgraphql.scalars import GraphQLID
-from fastgraphql.schema import SelfGraphQL, GraphQLSchema
+from fastgraphql.schema import GraphQLSchema, SelfGraphQL
 from fastgraphql.sqlalchemy import adapt_sqlalchemy_graphql
 from fastgraphql.types import GraphQLDataType
 from fastgraphql.utils import DefaultToCamelCase

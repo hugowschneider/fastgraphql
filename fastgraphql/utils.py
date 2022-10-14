@@ -1,4 +1,5 @@
 import os
+
 from typing import Callable, Optional
 
 FAST_GRAPHQL_DEBUG = "FAST_GRAPHQL_DEBUG"

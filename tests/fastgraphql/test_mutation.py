@@ -4,8 +4,8 @@ from typing import Optional
 from pydantic import BaseModel
 
 from fastgraphql import FastGraphQL
-from fastgraphql.schema import SelfGraphQL
 from fastgraphql.scalars import GraphQLScalar
+from fastgraphql.schema import SelfGraphQL
 
 
 class TestQueryRendering:

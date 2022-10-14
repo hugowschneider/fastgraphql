@@ -1,5 +1,5 @@
-from datetime import datetime, date, time
-from typing import Optional, Callable, Any, Type
+from datetime import date, datetime, time
+from typing import Any, Callable, Optional, Type
 
 from fastgraphql.types import GraphQLDataType, GraphQLReference
 from fastgraphql.utils import MutableString

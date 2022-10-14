@@ -1,11 +1,12 @@
-from datetime import datetime, timezone, timedelta
-from typing import Any, Optional
 import json
+
+from datetime import datetime, timedelta, timezone
+from typing import Any, Optional
+
 import pytest
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-
 from pydantic import BaseModel, Field
 
 from fastgraphql import FastGraphQL

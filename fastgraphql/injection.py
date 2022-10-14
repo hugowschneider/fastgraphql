@@ -1,5 +1,7 @@
 import inspect
-from typing import Any, Callable, Dict, Optional, Tuple, Type, Union, Literal
+
+from typing import Any, Callable, Dict, Literal, Optional, Tuple, Type, Union
+
 from graphql import GraphQLResolveInfo
 
 
