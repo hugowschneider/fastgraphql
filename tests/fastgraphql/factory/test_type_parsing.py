@@ -2,18 +2,19 @@ from datetime import date, datetime, time
 from typing import Optional, Type, cast
 
 import pytest
+
 from pydantic import BaseModel
 
 from fastgraphql.exceptions import GraphQLFactoryException
 from fastgraphql.factory import GraphQLTypeFactory, _DateFormats
 from fastgraphql.scalars import (
-    GraphQLInteger,
-    GraphQLString,
-    GraphQLFloat,
+    GraphQLBoolean,
     GraphQLDate,
     GraphQLDateTime,
+    GraphQLFloat,
+    GraphQLInteger,
+    GraphQLString,
     GraphQLTime,
-    GraphQLBoolean,
 )
 from fastgraphql.schema import GraphQLSchema
 from fastgraphql.types import GraphQLType

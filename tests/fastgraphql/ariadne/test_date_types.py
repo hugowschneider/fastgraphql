@@ -1,8 +1,10 @@
 import json
-from datetime import datetime, date, time, timezone, timedelta
+
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Any
 
 import pytest
+
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 

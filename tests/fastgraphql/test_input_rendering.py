@@ -1,11 +1,11 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
 from fastgraphql import FastGraphQL
-from fastgraphql.schema import SelfGraphQL
 from fastgraphql.scalars import GraphQLID
+from fastgraphql.schema import SelfGraphQL
 
 expected_scalar_def = """
 scalar DateTime

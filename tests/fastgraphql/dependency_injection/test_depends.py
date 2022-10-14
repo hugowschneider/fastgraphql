@@ -1,4 +1,5 @@
-from typing import Any, Generator, Optional, List
+from typing import Any, Generator, List, Optional
+
 import pytest
 
 from fastapi import FastAPI

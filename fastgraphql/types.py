@@ -1,4 +1,4 @@
-from typing import Any, Callable, List, Optional, Type, TypeVar, Dict
+from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
 
 from fastgraphql.injection import Injectable, InjectableRequestType
 from fastgraphql.utils import DEFAULT_TAB

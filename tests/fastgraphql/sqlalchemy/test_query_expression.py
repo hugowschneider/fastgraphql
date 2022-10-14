@@ -1,15 +1,12 @@
 from typing import Any
 
 import pytest
-from sqlalchemy import (
-    Column,
-    Integer,
-)
+
+from sqlalchemy import Column, Integer
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import query_expression
 
 from fastgraphql import FastGraphQL
-from sqlalchemy.ext.declarative import declarative_base
-
 from fastgraphql.schema import SelfGraphQL
 
 TEST_TABLE_ID = "test1.id"

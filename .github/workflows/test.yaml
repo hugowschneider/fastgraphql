@@ -38,6 +38,8 @@ jobs:
         run: poetry install --with dev --all-extras
       - name: Lint
         run: make lint
+      - name: Check Imports
+        run: make check-imports
       - name: Type Checking
         run: make type-check
       - name: General Static Analysis

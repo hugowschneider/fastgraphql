@@ -2,7 +2,7 @@ import pytest
 
 from fastgraphql import FastGraphQL
 from fastgraphql.exceptions import GraphQLFactoryException
-from fastgraphql.factory import GraphQLTypeFactory, _DateFormats, GraphQLFunctionFactory
+from fastgraphql.factory import GraphQLFunctionFactory, GraphQLTypeFactory, _DateFormats
 from fastgraphql.schema import GraphQLSchema
 
 

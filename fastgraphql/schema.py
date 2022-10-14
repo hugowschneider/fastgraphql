@@ -1,20 +1,19 @@
 from typing import (
     Any,
+    Callable,
     Dict,
     Iterable,
     Optional,
     Type,
-    cast,
-    Union,
-    Callable,
-    overload,
     TypeVar,
+    Union,
+    cast,
+    overload,
 )
-
 
 from fastgraphql.exceptions import GraphQLSchemaException
 from fastgraphql.scalars import GraphQLScalar
-from fastgraphql.types import GraphQLType, GraphQLFunction
+from fastgraphql.types import GraphQLFunction, GraphQLType
 from fastgraphql.utils import DEFAULT_TAB
 
 T = TypeVar("T")

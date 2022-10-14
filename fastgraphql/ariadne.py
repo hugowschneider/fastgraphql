@@ -1,15 +1,15 @@
 from typing import List
 
 from fastgraphql import FastGraphQL
-from fastgraphql.utils import get_env_bool, FAST_GRAPHQL_DEBUG
+from fastgraphql.utils import FAST_GRAPHQL_DEBUG, get_env_bool
 
 try:
     from ariadne import (
-        make_executable_schema as ariadne_make_executable_schema,
         MutationType,
         QueryType,
-        SchemaBindable,
         ScalarType,
+        SchemaBindable,
+        make_executable_schema as ariadne_make_executable_schema,
     )
     from ariadne.asgi import GraphQL
 

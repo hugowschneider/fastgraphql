@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Type, cast
 
 import pytest
+
 from pydantic import BaseModel
 
 from fastgraphql.exceptions import GraphQLFactoryException

@@ -1,48 +1,46 @@
 import inspect
+
 from datetime import date, datetime, time
 from inspect import Parameter
 from typing import (
+    Any,
+    Callable,
     List,
+    Optional,
+    Tuple,
     Type,
     TypeVar,
-    Optional,
     Union,
-    Tuple,
-    get_origin,
-    get_args,
     cast,
-    Callable,
-    Any,
+    get_args,
+    get_origin,
 )
 
-from pydantic.fields import ModelField
 from pydantic import BaseModel
+from pydantic.fields import ModelField
 
 from fastgraphql.exceptions import GraphQLFactoryException
-from fastgraphql.injection import InjectableFunction, Injectable
-from fastgraphql.schema import (
-    GraphQLSchema,
-    SelfGraphQL,
-)
-from fastgraphql.types import (
-    GraphQLDataType,
-    GraphQLTypeAttribute,
-    GraphQLType,
-    GraphQLArray,
-    GraphQLFunctionField,
-    GraphQLFunction,
-)
+from fastgraphql.injection import Injectable, InjectableFunction
 from fastgraphql.scalars import (
-    GraphQLScalar,
     GraphQLBoolean,
-    GraphQLInteger,
-    GraphQLString,
-    GraphQLFloat,
-    GraphQLDateTime,
     GraphQLDate,
+    GraphQLDateTime,
+    GraphQLFloat,
+    GraphQLInteger,
+    GraphQLScalar,
+    GraphQLString,
     GraphQLTime,
 )
-from fastgraphql.utils import MutableString, DefaultNames, DefaultUnchanged
+from fastgraphql.schema import GraphQLSchema, SelfGraphQL
+from fastgraphql.types import (
+    GraphQLArray,
+    GraphQLDataType,
+    GraphQLFunction,
+    GraphQLFunctionField,
+    GraphQLType,
+    GraphQLTypeAttribute,
+)
+from fastgraphql.utils import DefaultNames, DefaultUnchanged, MutableString
 
 T = TypeVar("T", bound=BaseModel)
 T_ANY = TypeVar("T_ANY")

@@ -2,11 +2,9 @@ from typing import Any, cast
 
 import pytest
 
-
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from graphql import GraphQLResolveInfo
-
 from pydantic import BaseModel
 from starlette.requests import Request
 
