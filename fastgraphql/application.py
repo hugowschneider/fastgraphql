@@ -1,3 +1,4 @@
+""" This Module contains the entry point for all FastGraphQL definitions"""
 import functools
 import logging
 
@@ -25,11 +26,19 @@ from fastgraphql.schema import GraphQLSchema
 from fastgraphql.types import GraphQLFunction, GraphQLQueryField, GraphQLType
 from fastgraphql.utils import DefaultNames
 
-T = TypeVar("T", bound=BaseModel)
-T_ANY = TypeVar("T_ANY")
+PydanticModel = TypeVar("PydanticModel", bound=BaseModel)
+T = TypeVar("T")
 
 
 class FastGraphQL:
+    """FastGraphQL class is used to define and generate all GraphQL definition based in code.
+
+    Args:
+        default_names (Optional[DefaultNames], optional): Defines the default naming convention
+        for GraphQL names. Defaults to None, which means all names will be exactly the same as
+        the define python names.
+    """
+
     def __init__(self, default_names: Optional[DefaultNames] = None) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.default_names = default_names
@@ -99,13 +108,15 @@ class FastGraphQL:
         name: Optional[str],
         as_input: bool,
         default_names: Optional[DefaultNames],
-    ) -> Callable[..., Type[T]]:
+    ) -> Callable[..., Type[PydanticModel]]:
         if exclude_model_attrs is None:
             exclude_model_attrs = []
 
-        def decorator(python_type: Type[T]) -> Type[T]:
+        def decorator(python_type: Type[PydanticModel]) -> Type[PydanticModel]:
             self.logger.info(
-                f"Constructing GraphQL {'input' if as_input else 'type'} for {python_type.__qualname__}"
+                "Constructing GraphQL %s for %s",
+                "input" if as_input else "type",
+                python_type.__qualname__,
             )
             if as_input:
                 factory = self.input_factory
@@ -130,7 +141,7 @@ class FastGraphQL:
         exclude_model_attrs: Optional[List[str]] = None,
         name: Optional[str] = None,
         default_names: Optional[DefaultNames] = None,
-    ) -> Callable[..., Type[T]]:
+    ) -> Callable[..., Type[PydanticModel]]:
         return self._graphql_model(
             exclude_model_attrs=exclude_model_attrs,
             name=name,
@@ -143,7 +154,7 @@ class FastGraphQL:
         exclude_model_attrs: Optional[List[str]] = None,
         default_names: Optional[DefaultNames] = None,
         name: Optional[str] = None,
-    ) -> Callable[..., Type[T]]:
+    ) -> Callable[..., Type[PydanticModel]]:
         return self._graphql_model(
             exclude_model_attrs=exclude_model_attrs,
             name=name,
@@ -155,7 +166,7 @@ class FastGraphQL:
         self,
         name: Optional[str] = None,
         default_names: Optional[DefaultNames] = None,
-    ) -> Callable[..., Callable[..., T_ANY]]:
+    ) -> Callable[..., Callable[..., T]]:
         return self._graphql_function(
             name=name, as_mutation=False, default_names=default_names
         )
@@ -164,7 +175,7 @@ class FastGraphQL:
         self,
         name: Optional[str] = None,
         default_names: Optional[DefaultNames] = None,
-    ) -> Callable[..., Callable[..., T_ANY]]:
+    ) -> Callable[..., Callable[..., T]]:
         return self._graphql_function(
             name=name, as_mutation=True, default_names=default_names
         )
@@ -174,10 +185,12 @@ class FastGraphQL:
         name: Optional[str],
         as_mutation: bool,
         default_names: Optional[DefaultNames],
-    ) -> Callable[..., Callable[..., T_ANY]]:
-        def decorator(func: Callable[..., T_ANY]) -> Callable[..., T_ANY]:
+    ) -> Callable[..., Callable[..., T]]:
+        def decorator(func: Callable[..., T]) -> Callable[..., T]:
             self.logger.info(
-                f"Constructing GraphQL {'mutation' if as_mutation else 'query'} for {func.__qualname__}"
+                "Constructing GraphQL %s for %s",
+                "mutation" if as_mutation else "query",
+                func.__qualname__,
             )
             if as_mutation:
                 graphql_type = self.mutation_factory.create_function(
@@ -194,7 +207,7 @@ class FastGraphQL:
                 raise GraphQLRunTimeError("Something went wrong")
 
             @functools.wraps(func)
-            def _decorator(*args: Tuple[Any], **kwargs: Dict[str, Any]) -> T_ANY:
+            def _decorator(*args: Tuple[Any], **kwargs: Dict[str, Any]) -> T:
                 parameters_kwargs: Dict[str, Any] = {}
                 for parameter in graphql_type.parameters:
                     python_name = parameter.python_name
@@ -214,7 +227,7 @@ class FastGraphQL:
 
                 return_value = func(**{**injected_kwargs, **parameters_kwargs})
                 if isinstance(return_value, BaseModel):
-                    return cast(T_ANY, graphql_type.map_to_output(return_value.dict()))
+                    return cast(T, graphql_type.map_to_output(return_value.dict()))
                 else:
                     return return_value
 

@@ -4,7 +4,7 @@ from fastgraphql.ariadne import make_graphql_asgi
 try:
     from fastapi.routing import APIRouter
 except ImportError as e:  # pragma: no cover
-    raise ImportError(f"{e}.\nPlease use `pip install fastgraphql[ariadne]`")
+    raise ImportError(f"{e}.\nPlease use `pip install fastgraphql[ariadne]`") from e
 
 
 def make_ariadne_fastapi_router(
