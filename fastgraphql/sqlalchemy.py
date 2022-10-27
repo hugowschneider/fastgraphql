@@ -18,11 +18,10 @@ try:
     from sqlalchemy.exc import NoInspectionAvailable
     from sqlalchemy.inspection import inspect as inspect
     from sqlalchemy.orm import Mapper, RelationshipProperty
-    from sqlalchemy.sql.elements import Label
     from sqlalchemy.sql.type_api import TypeEngine
 
 except ImportError as e:  # pragma: no cover
-    raise ImportError(f"{e}.\nPlease use `pip install fastgraphql[sqlalchemy]`")
+    raise ImportError("Please use `pip install fastgraphql[sqlalchemy]`") from e
 
 T = TypeVar("T")
 
@@ -51,8 +50,8 @@ def adapt_sqlalchemy_graphql(
         mapper = inspect(python_type)
     except NoInspectionAvailable as e:
         raise GraphQLFactoryException(
-            f"{python_type.__qualname__} does not seems to be a SQLAlchemy Model\n{e}"
-        )
+            f"{python_type.__qualname__} does not seems to be a SQLAlchemy Model"
+        ) from e
 
     if graphql_type := SelfGraphQL.check_if_exists(
         python_type=python_type, as_input=as_input
@@ -64,8 +63,11 @@ def adapt_sqlalchemy_graphql(
     graphql_type = GraphQLType(name=name, as_input=as_input, python_type=python_type)
 
     for column in mapper.columns:
-        if isinstance(column, Label):
-            logger.warning("SQLAlchemy query_expressions are not supported, yet...")
+        if not isinstance(column, Column):
+            logger.warning(
+                "SQLAlchemy type %s are not supported, yet...",
+                column.__class__.__name__,
+            )
             continue
         if column.name in exclude_model_attrs:
             continue

@@ -12,10 +12,10 @@ try:
         make_executable_schema as ariadne_make_executable_schema,
     )
     from ariadne.asgi import GraphQL
+    from graphql import GraphQLSchema
 
 except ImportError as e:  # pragma: no cover
-    raise ImportError(f"{e}.\nPlease use `pip install fastgraphql[ariadne]`")  #
-from graphql import GraphQLSchema
+    raise ImportError("Please use `pip install fastgraphql[ariadne]`") from e
 
 
 def make_executable_schema(fast_graqhql: FastGraphQL) -> GraphQLSchema:
