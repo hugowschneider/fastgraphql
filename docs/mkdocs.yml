@@ -1,0 +1,33 @@
+site_name: FastGraphQL
+site_description: FastGraphQL is intended to help developer create code driven GraphQL APIs.
+site_url: https://hugowschneider.github.io/fastgraphql
+theme:
+  name: material
+  palette:
+  - media: '(prefers-color-scheme: light)'
+    scheme: default
+    accent: amber
+    toggle:
+      icon: material/lightbulb
+      name: Switch to light mode
+  - media: '(prefers-color-scheme: dark)'
+    scheme: slate
+    accent: amber
+    toggle:
+      icon: material/lightbulb-outline
+      name: Switch to dark mode
+  features:
+  - search.suggest
+  - search.highlight
+  - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github-alt
+  logo: img/icon-white.svg
+  favicon: img/favicon.png
+  language: en
+repo_name: hugowschneider/fastgraphql
+repo_url: https://github.com/hugowschneider/fastgraphql
+edit_uri: ''
+docs_dir: pages
+plugins:
+- search
