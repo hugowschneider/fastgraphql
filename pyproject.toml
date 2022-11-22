@@ -40,11 +40,13 @@ flake8 = "^6.0.0"
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^8.5.10"
 svgwrite = "^1.4.3"
+termynal = "^0.2.0"
 
 [tool.poetry.extras]
 ariadne = ["ariadne"]
 sqlalchemy = ["sqlalchemy"]
 fastapi = ["fastapi"]
+all = ["ariadne", "sqlalchemy", "fastapi"]
 
 [build-system]
 requires = ["poetry-core"]
@@ -56,6 +58,10 @@ strict = true
 [[tool.mypy.overrides]]
 module = ["tests.*"]
 allow_subclassing_any = true
+
+[[tool.mypy.overrides]]
+module = ["svgwrite.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 addopts = [

@@ -1,5 +1,8 @@
 # FastGraphQL
-FastGraphQL is intended to help developer create code driven GraphQL APIs.
+![FastGraphQL](assets/logo_text.svg)
+<p style="text-align: center;">FastGraphQL is a tool for creating code driven GraphQL APIs.</p>
+
+----------
 
 ![pypi](https://img.shields.io/pypi/v/fastgraphql)
 ![Python Versions](https://img.shields.io/pypi/pyversions/fastgraphql.svg?color=%2334D058)
@@ -17,9 +20,14 @@ FastGraphQL is intended to help developer create code driven GraphQL APIs.
 [![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=hugowschneider_fastgraphql&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=hugowschneider_fastgraphql)
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=hugowschneider_fastgraphql&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=hugowschneider_fastgraphql)
 
+-------
+Documentation: [https://hugowschneider.github.io/fastgraphql](https://hugowschneider.github.io/fastgraphql)
+
+Source Code: [https://github.com/hugowschneider/fastgraphql](https://github.com/hugowschneider/fastgraphql)
+
 # Disclaimer
 
-*This is still a work in progress*
+*This is still a work in progress and all support is welcomed*
 
 # Motivation
 
@@ -27,17 +35,34 @@ So far most of the projects that uses GraphQL need to duplicate
 many definitions to be able to have a consistent GraphQL API schema 
 alongside well-defined models that governs the development and the application.
 
-FastGraphQL tries to shortcut the path between python models and GraphQL schema
+FastGraphQL proposes to shortcut the path between python models and GraphQL schema
 using **Pydantic** models. This ensures not only a single source of truth when comes to 
-type, inputs, query and mutation definition reflected in classes and methods, but also the
-ability to use **Pydantic** to validate models.
+type, input, query and mutation definitions, but also the
+ability to use **Pydantic** to features on models and inputs.
 
 # Installation
 
-```commandline
-pip install fastgraphql
+```shell
+$ pip install "fastgraphql[all]"
+```
+You will also need an ASGI server as well to serve your API
+
+```shell
+$ pip install "uvicorn[standard]"
 ```
 
+# Learn
+
+
+# Integration
+
+FastGraphQL generates independently of any integration a data structure containing all GraphQL definitions and resolvers, which
+can generate the GraphQL schema string.
+
+With that said, all integration will add functionalities and provide
+easy and alternative deployments of the defined API.
+
+For integration go to:
 
 # Usage
 
