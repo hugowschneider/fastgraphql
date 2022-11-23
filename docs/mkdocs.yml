@@ -38,6 +38,7 @@ plugins:
 - termynal
 markdown_extensions:
 - admonition
+- tables
 - pymdownx.snippets:
     base_path: 'src/'  
 - pymdownx.highlight:
@@ -55,4 +56,8 @@ markdown_extensions:
 nav:
   - FastGraphQL: index.md
   - Tutorial:
-    - Getting Started: tutorial/index.md
+    - tutorial/index.md
+    - tutorial/data-types.md
+    - tutorial/complex-types.md
+    - tutorial/query-mutation.md
+    
