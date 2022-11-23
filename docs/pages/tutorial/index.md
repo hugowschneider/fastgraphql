@@ -4,9 +4,11 @@ In this section we will get started and build our first GraphQL API using **Fast
 
 # Running your application
 
-In this tutorial we will use two integrated components to create our GraphQL API, those are [FastAPI](https://fastapi.tiangolo.com/) and [Ariadne](https://ariadnegraphql.org). 
+In this tutorial we will use two integrated components to create our GraphQL API, those are 
+<a href="https://fastapi.tiangolo.com/" target="_blank">FastAPI</a>
+and <a href="https://ariadnegraphql.org" target="_blank">Ariadne</a>. 
 
-We will use [uvicorn](https://www.uvicorn.org) to run the application:
+We will use <a href="https://www.uvicorn.org" target="_blank">uvicorn</a> to run the application:
 
 ```shell
 $ uvicorn main:app --reload
@@ -34,9 +36,9 @@ $ uvicorn main:app --reload
 
 ## Check it
 
-Open your browser at [http://localhost:8000/graphql](http://localhost:8000/graphql).
+Open your browser at <a href="http://127.0.0.1:8000/graphql" target="_blank">http://127.0.0.1:8000/graphql</a>.
 
-Doing that you will see the [GraphQL Playground](https://github.com/graphql/graphql-playground) where you can explore your GraphQL API.
+Doing that you will see the <a href="https://github.com/graphql/graphql-playground" target="_blank">GraphQL Playground</a> where you can explore your GraphQL API.
 
 ## Dissecting the code
 
@@ -49,13 +51,13 @@ Doing that you will see the [GraphQL Playground](https://github.com/graphql/grap
 `#!python FastGraphQL` is a class which is the base for all GraphQL definition and for management of the API calls.
 Its instance and methods should be starting point of defining your GraphQL API.
 
-### Step 2: Instanciating
+### Step 2: Instantiating
 
 ```python title="main.py" linenums="1" hl_lines="6"
 --8<-- "tutorial/index/main.py"
 ```
-`#!python fast_graphql = FastGraphQL()` is where everything start. The varible `#!python fast_graphql` will be used
-across the code define the complete GraphQLAPI
+`#!python fast_graphql = FastGraphQL()` is where everything start. The variable `#!python fast_graphql` will be used
+across the code define the complete GraphQL API
 
 !!! note "Customizations"
     The class initializer allows customizations to the complete GraphQL Schema generation. This will be covered in [Global Customizations](license.md)
@@ -88,7 +90,7 @@ handled as a resolver for a query. The query name will be exactly the same as th
 #### Method signature
 
 The most import python feature *FastGraphQL* uses, is type hinting and everything is based on that. Having said that,
-the method signature `#!python def hello() -> str:` is able to tell all necessary infomations to *FastGraphQL*, which in
+the method signature `#!python def hello() -> str:` is able to tell all necessary information to *FastGraphQL*, which in
 this case are:
 
 1. method name: `hello`
@@ -106,13 +108,13 @@ this case are:
 
 app.include_router(make_ariadne_fastapi_router(fast_graphql=fast_graphql))
 
-Lets tear this lines appart:
+Lets tear this lines apart:
 
 * `#!python from fastgraphql.fastapi import make_ariadne_fastapi_router` is importing from the FastAPI integration inside FastGraphQL, the 
 method we will use to expose our implementation as a GraphQL API.
-* `#!python app.include_router(...)` this is part of the FastAPI API and it includer a router 
+* `#!python app.include_router(...)` this is part of the FastAPI API and it includes a router 
 returned by `#!python make_ariadne_fastapi_router(...)`. See [FastAPI](https://fastapi.tiangolo.com/tutorial/bigger-applications/#include-the-apirouters-for-users-and-items) for more details to this method
-* `#!python make_ariadne_fastapi_router(...)` is part of FastAPI and Ariadne integrations. It generates an executable
+* `#!python make_ariadne_fastapi_router(...)` is part of FastAPI and Ariadne integration. It generates an executable
 schema using Ariadne's API and returns a FastAPI router to expose the GraphQL API using the FastAPI application `#!python app`.
 
 ## GraphQL Schema

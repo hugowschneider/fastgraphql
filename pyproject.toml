@@ -41,6 +41,7 @@ flake8 = "^6.0.0"
 mkdocs-material = "^8.5.10"
 svgwrite = "^1.4.3"
 termynal = "^0.2.0"
+mkdocs-glightbox = "^0.3.1"
 
 [tool.poetry.extras]
 ariadne = ["ariadne"]

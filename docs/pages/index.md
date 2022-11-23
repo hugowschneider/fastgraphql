@@ -21,9 +21,9 @@
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=hugowschneider_fastgraphql&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=hugowschneider_fastgraphql)
 
 -------
-Documentation: [https://hugowschneider.github.io/fastgraphql](https://hugowschneider.github.io/fastgraphql)
+Documentation: <a href="https://hugowschneider.github.io/fastgraphql" target="_blank">https://hugowschneider.github.io/fastgraphql</a>
 
-Source Code: [https://github.com/hugowschneider/fastgraphql](https://github.com/hugowschneider/fastgraphql)
+Source Code: <a href="https://github.com/hugowschneider/fastgraphql" target="_blank">https://github.com/hugowschneider/fastgraphql</a>
 
 # Disclaimer
 

@@ -52,10 +52,10 @@ Assuming that `T` is any supported type by **FastGraqhQL**, python lists are tra
 | `#!python Optional[List[Optional[T]]]`           | `[T]`      |
 
 
-## Dates, Times and DateTimes
+## Dates, Times and Date-Times
 
 **FastGraphQL** provides three custom GraphQL scalars with respective encoders and 
-decoders to support date, time and datetime types. 
+decoders to support date, time and date-time types. 
 
 | Python Type   | GraphQL Scalar | Default Format |
 | --------------|----------------|----------------|
@@ -64,8 +64,8 @@ decoders to support date, time and datetime types.
 | `#!python datetime.datetime`       | `Time`      |`%H:%M:%ST%Y-%m-%d%z`|
 
 !!! Note "Date and Time format string"
-    For all details about format string please refer to 
-    [strftime() and strptime() Format Codes](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes)
+    For all details about format strings please refer to 
+    <a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" target="_blank">strftime() and strptime() Format Codes</a>
 
 !!! Note "Date and Time format customization"
     The default format string can be customized. The details about it you 
@@ -74,6 +74,6 @@ decoders to support date, time and datetime types.
 
 ## Enums
 
-Unfortunetly, GraphQL Enums are yet not supported. I hope it will change soonish :sweat_smile:.
+Unfortunately, GraphQL Enums are yet not supported. I hope it will change soonish :sweat_smile:.
 
 
