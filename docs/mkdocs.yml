@@ -36,6 +36,7 @@ docs_dir: pages
 plugins:
 - search
 - termynal
+- glightbox
 markdown_extensions:
 - admonition
 - tables
@@ -58,6 +59,6 @@ nav:
   - Tutorial:
     - tutorial/index.md
     - tutorial/data-types.md
-    - tutorial/complex-types.md
+    - tutorial/simple-classes.md
     - tutorial/query-mutation.md
     

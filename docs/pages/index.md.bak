@@ -128,11 +128,11 @@ input Input {
 
 ## Query and Mutation
 
-Following the same approach with annotation driven definitions, query and mutations can
+Following the same approach with annotation driven defitions, query and mutations can
 easily be defined using `FastGraphQL.graphql_query` and `FastGraphQL.mutation`.
 
 Note that all function arguments annotated with `FastGraphQL.graphql_query_field`
-are considered to be input arguments for the GraphQL API and simple types and 
+are considered to be input arguments for the GraphQL API and simples types and 
 **Pydantic** models can be used and arguments and also as return type and they don't 
 need to be explicitly annotated.
 
@@ -181,7 +181,7 @@ type Query {
 }
 ```
 
-# Dependency Injection
+# Dependecy Injection
 Query and Mutation can have dependencies injected using `FastGraphQL.depende(...)` as showed bellow:`
 
 ```python
@@ -220,7 +220,7 @@ pip install fastgraphql[ariadne]
 ```
 
 The method `make_executable_schema` in the module `fastgraphql.ariadne`
-can create the Ariadne's executable schema to integrate to other
+can create the ariadne's executable schema to integrate to other
 frameworks like FastAPI. See https://ariadnegraphql.org/docs/starlette-integration
 
 ## FastAPI
@@ -266,7 +266,7 @@ pip install fastgraphql[sqlalchemy]
 ```
 
 SQLAlchemy, then, models can be incorporated to the GraphQL API 
-by first telling FastGraphQL what which is the base class to be 
+by first telling FastGraphQLwhat which is the base class to be 
 considered:
 
 ```python
@@ -282,7 +282,7 @@ fast_graphql.set_sqlalchemy_base(Base)
 ```
 
 and after that, any SQLAlchemy model can be using as types and inputs.
-The models can also be used as query's and mutation's inputs and outputs. For example:
+The models can also be used as query's and mutation's inputs and outpus. For example:
 
 ```python
 from fastgraphql import FastGraphQL
