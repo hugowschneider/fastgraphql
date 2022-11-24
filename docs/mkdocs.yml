@@ -6,26 +6,26 @@ theme:
   logo: assets/logo.svg
   favicon: assets/favicon.png
   features:
-  - navigation.instant
-  - navigation.expand
-  - navigation.indexes  
+    - navigation.instant
+    - navigation.expand
+    - navigation.indexes  
   palette:
-  - media: '(prefers-color-scheme: light)'
-    scheme: default
-    accent: amber
-    toggle:
-      icon: material/lightbulb
-      name: Switch to light mode
-  - media: '(prefers-color-scheme: dark)'
-    scheme: slate
-    accent: amber
-    toggle:
-      icon: material/lightbulb-outline
-      name: Switch to dark mode
+    - media: '(prefers-color-scheme: light)'
+      scheme: default
+      accent: amber
+      toggle:
+        icon: material/lightbulb
+        name: Switch to light mode
+    - media: '(prefers-color-scheme: dark)'
+      scheme: slate
+      accent: amber
+      toggle:
+        icon: material/lightbulb-outline
+        name: Switch to dark mode
   features:
-  - search.suggest
-  - search.highlight
-  - content.tabs.link
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
   icon:
     repo: fontawesome/brands/github-alt
   language: en
@@ -34,27 +34,29 @@ repo_url: https://github.com/hugowschneider/fastgraphql
 edit_uri: ''
 docs_dir: pages
 plugins:
-- search
-- termynal
-- glightbox
+  - search
+  - termynal
+  - glightbox
 markdown_extensions:
-- admonition
-- tables
-- pymdownx.snippets:
-    base_path: 'src/'  
-- pymdownx.highlight:
-    anchor_linenums: true
-- pymdownx.inlinehilite
-- pymdownx.emoji:
-    emoji_index: !!python/name:materialx.emoji.twemoji
-    emoji_generator: !!python/name:materialx.emoji.to_svg
-- pymdownx.superfences:
-    custom_fences:
-      - name: mermaid
-        class: mermaid
-        format: !!python/name:pymdownx.superfences.fence_code_format
+  - admonition
+  - tables
+  - pymdownx.snippets:
+      base_path: 'src/'  
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
 extra_css:
   - stylesheets/extra.css
+watch:
+  - src
 nav:
   - FastGraphQL: index.md
   - Tutorial:
