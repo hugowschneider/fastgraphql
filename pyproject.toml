@@ -31,11 +31,12 @@ black = "^22.8.0"
 mypy = "^0.971"
 pytest = "^7.2.0"
 pytest-cov = ">=3.0.0"
-pyflakes = "^2.5.0"
 pytest-mock = "^3.8.2"
 autoflake = "^1.6.1"
 requests = "^2.28.1"
 isort = "^5.10.1"
+flake8 = "<6"
+flake8-pyproject = "^1.2.0"
 
 
 [tool.poetry.extras]
@@ -58,6 +59,7 @@ allow_subclassing_any = true
 addopts = [
     "--strict-config",
     "--strict-markers",
+    "-vv",
 ]
 xfail_strict = true
 junit_family = "xunit2"

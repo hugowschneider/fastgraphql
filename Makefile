@@ -11,7 +11,7 @@ lint:
 	@poetry run black --check $(ALL_SRC)
 
 static-analysis:
-	@poetry run pyflakes $(ALL_SRC)
+	@poetry run flake8 $(ALL_SRC)
 
 check-imports:
 	@poetry run isort --check $(ALL_SRC)

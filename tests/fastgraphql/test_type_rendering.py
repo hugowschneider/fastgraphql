@@ -41,7 +41,7 @@ type TypeWithoutReferences {
     t_opt_datatime: DateTime
     t_boolean: Boolean!
     t_opt_boolean: Boolean
-} 
+}
         """.strip()
         self_graphql = SelfGraphQL.introspect(TypeWithoutReferences)
         assert self_graphql
@@ -77,7 +77,7 @@ type Type1 {
     t_opt_float: Float
     t_datatime: DateTime!
     t_opt_datatime: DateTime
-} 
+}
             """.strip()
 
         self_graphql = SelfGraphQL.introspect(TypeWithoutReferences)
@@ -109,7 +109,7 @@ type Type1 {
 type TypeWithReference {
     t_int: Int!
     t_type_with_references: TypeWithoutReferences!
-} 
+}
         """.strip()
         self_graphql = SelfGraphQL.introspect(TypeWithReference)
         assert self_graphql
@@ -148,7 +148,7 @@ type TypeWithReference {
 type Type2 {
     t_int: Int!
     t_type_with_references: Type1!
-} 
+}
         """.strip()
         self_graphql = SelfGraphQL.introspect(TypeWithReference)
         assert self_graphql
@@ -190,7 +190,7 @@ type TypeWithoutReferences {
     t_opt_float: Float
     t_datatime: DateTime!
     t_opt_datatime: DateTime
-} 
+}
         """.strip()
         self_graphql = SelfGraphQL.introspect(TypeWithoutReferences)
         assert self_graphql
@@ -289,7 +289,7 @@ type ChildModel {
             t_id: str = Field(..., graphql_type=GraphQLScalar("CustomScalar"))
 
         expected_scalar_def = """
-scalar CustomScalar        
+scalar CustomScalar
 """.strip()
 
         expected_graphql_def = """

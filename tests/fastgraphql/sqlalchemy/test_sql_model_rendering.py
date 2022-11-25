@@ -22,6 +22,7 @@ from fastgraphql.schema import GraphQLSchema, SelfGraphQL
 from fastgraphql.sqlalchemy import adapt_sqlalchemy_graphql
 from fastgraphql.types import GraphQLDataType
 from fastgraphql.utils import DefaultToCamelCase
+from fastgraphql.context import AdaptContext
 
 TEST_TABLE_ID = "test1.id"
 
@@ -67,7 +68,7 @@ type TypeWithoutReferences {
     t_opt_datatime: DateTime
     t_boolean: Boolean!
     t_opt_boolean: Boolean
-} 
+}
             """.strip()
         self_graphql = SelfGraphQL.introspect(TypeWithoutReferences)
         assert self_graphql
@@ -82,8 +83,9 @@ type TypeWithoutReferences {
     def test_not_sql_model_exception(self) -> None:
         def parse_function(
             python_type_: Type[Any],
-            exclude_model_attrs_: Optional[List[str]] = None,
-            name_: Optional[str] = None,
+            exclude_model_attrs_: Optional[List[str]],
+            name_: Optional[str],
+            context_: Optional[AdaptContext],
         ) -> Tuple[GraphQLDataType, bool]:  # pragma: no cover
             ...
 
@@ -98,6 +100,7 @@ type TypeWithoutReferences {
                 name=None,
                 exclude_model_attrs=None,
                 as_input=False,
+                context=None,
             )
 
     def test_type_with_relationship(self, fast_graphql: FastGraphQL) -> None:
@@ -130,7 +133,7 @@ type TypeWithoutReferences {
 type TypeReference {
     id: Int!
     reference: TypeWithoutReferences!
-} 
+}
             """.strip()
         self_graphql = SelfGraphQL.introspect(TypeReference)
         assert self_graphql
@@ -142,7 +145,7 @@ type TypeReference {
 type TypeNullableReference {
     id: Int!
     reference: TypeWithoutReferences
-} 
+}
             """.strip()
         self_graphql = SelfGraphQL.introspect(TypeNullableReference)
         assert self_graphql
@@ -194,7 +197,7 @@ type Model {
 type TypeReference {
     id: Int!
     reference_id: Int!
-} 
+}
             """.strip()
         self_graphql = SelfGraphQL.introspect(TypeReference)
         assert self_graphql
@@ -206,7 +209,7 @@ type TypeReference {
 type TypeNullableReference {
     id: Int!
     reference_id: Int
-} 
+}
             """.strip()
         self_graphql = SelfGraphQL.introspect(TypeNullableReference)
         assert self_graphql
@@ -234,7 +237,7 @@ type TypeNullableReference {
 type TypeNonNullableArray {
     t_int: Int!
     t_array: [String!]!
-} 
+}
             """.strip()
         self_graphql = SelfGraphQL.introspect(TypeNonNullableArray)
         assert self_graphql
@@ -246,7 +249,7 @@ type TypeNonNullableArray {
 type TypeNullableArray {
     t_int: Int!
     t_array: [String!]
-} 
+}
             """.strip()
         self_graphql = SelfGraphQL.introspect(TypeNullableArray)
         assert self_graphql
@@ -270,7 +273,7 @@ type TypeNullableArray {
             ...
 
         expected_query_definition = """
-simple_query(model: ModelInput!): Model!        
+simple_query(model: ModelInput!): Model!
         """.strip()
 
         expected_graphql_definition = f"""
@@ -304,7 +307,7 @@ type Query {{
         expected_graphql_def = """
 type Model {
     primaryKey: Int!
-} 
+}
             """.strip()
         self_graphql = SelfGraphQL.introspect(Model)
         assert self_graphql
@@ -325,7 +328,7 @@ type Model {
         expected_graphql_def = """
 type Model {
     primaryKey: Int!
-} 
+}
             """.strip()
         self_graphql = SelfGraphQL.introspect(Model)
         assert self_graphql
@@ -348,7 +351,7 @@ type Model {
         expected_graphql_def = """
 type Model {
     primaryKey: ID!
-} 
+}
             """.strip()
         self_graphql = SelfGraphQL.introspect(Model)
         assert self_graphql

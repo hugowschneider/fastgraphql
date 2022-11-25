@@ -18,7 +18,7 @@ from typing import (
 
 from pydantic import BaseModel
 
-from fastgraphql.exceptions import GraphQLRunTimeError
+from fastgraphql.exceptions import GraphQLRuntimeError
 from fastgraphql.factory import GraphQLFunctionFactory, GraphQLTypeFactory, _DateFormats
 from fastgraphql.injection import InjectableContext, InjectableFunction, InjectableType
 from fastgraphql.scalars import GraphQLScalar
@@ -31,12 +31,13 @@ T = TypeVar("T")
 
 
 class FastGraphQL:
-    """FastGraphQL class is used to define and generate all GraphQL definition based in code.
+    """FastGraphQL class is used to define and generate all GraphQL definition based
+    in code.
 
     Args:
-        default_names (Optional[DefaultNames], optional): Defines the default naming convention
-        for GraphQL names. Defaults to None, which means all names will be exactly the same as
-        the define python names.
+        default_names (Optional[DefaultNames], optional): Defines the default naming
+        convention for GraphQL names. Defaults to None, which means all names will be
+        exactly the same as the define python names.
     """
 
     def __init__(self, default_names: Optional[DefaultNames] = None) -> None:
@@ -128,9 +129,10 @@ class FastGraphQL:
                 name=name,
                 exclude_model_attrs=exclude_model_attrs,
                 default_names=default_names,
+                context=None,
             )
             if not isinstance(graphql_type, GraphQLType):  # pragma: no cover
-                raise GraphQLRunTimeError("Something went wrong")
+                raise GraphQLRuntimeError("Something went wrong")
 
             return python_type
 
@@ -204,7 +206,7 @@ class FastGraphQL:
                 self.schema.add_query(graphql_type)
 
             if not isinstance(graphql_type, GraphQLFunction):  # pragma: no cover
-                raise GraphQLRunTimeError("Something went wrong")
+                raise GraphQLRuntimeError("Something went wrong")
 
             @functools.wraps(func)
             def _decorator(*args: Tuple[Any], **kwargs: Dict[str, Any]) -> T:

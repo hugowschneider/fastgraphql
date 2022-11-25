@@ -31,7 +31,7 @@ class TestFactoryFunctionParsing:
     ) -> None:
         fast_graphql = FastGraphQL()
 
-        def func(input=fast_graphql.parameter()) -> str:  # type: ignore # pragma: no cover
+        def func(input=fast_graphql.parameter()) -> str:  # type: ignore # pragma: no cover # noqa
             ...
 
         with pytest.raises(GraphQLFactoryException):
@@ -42,7 +42,7 @@ class TestFactoryFunctionParsing:
     ) -> None:
         fast_graphql = FastGraphQL()
 
-        def func(input: str = fast_graphql.parameter()):  # type: ignore # pragma: no cover
+        def func(input: str = fast_graphql.parameter()):  # type: ignore # pragma: no cover # noqa
             ...
 
         with pytest.raises(GraphQLFactoryException):

@@ -1,5 +1,6 @@
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
+from typing import Any, Callable, Dict, ForwardRef, List, Optional, Type, TypeVar
 
+from fastgraphql.exceptions import GraphQLRuntimeError
 from fastgraphql.injection import Injectable, InjectableRequestType
 from fastgraphql.utils import DEFAULT_TAB
 
@@ -39,14 +40,14 @@ class GraphQLReference:
 
 class GraphQLTypeAttribute:
     def __init__(
-        self, graphql_name: str, python_name: str, attr_type: GraphQLReference
+        self, graphql_name: str, python_name: str, type_reference: GraphQLReference
     ):
         self.graphql_name = graphql_name
         self.python_name = python_name
-        self.attr_type = attr_type
+        self.type_reference = type_reference
 
     def render(self) -> str:
-        return f"{self.graphql_name}: {self.attr_type.render()}"
+        return f"{self.graphql_name}: {self.type_reference.render()}"
 
 
 class GraphQLType(GraphQLDataType):
@@ -54,36 +55,40 @@ class GraphQLType(GraphQLDataType):
         self,
         name: str,
         python_type: Type[T],
-        attrs: Optional[List[GraphQLTypeAttribute]] = None,
+        attrs: Optional[Dict[str, GraphQLTypeAttribute]] = None,
         as_input: bool = False,
     ):
         super().__init__(name=name, python_type=python_type)
         if not attrs:
-            attrs = []
+            attrs = {}
         self.attrs = attrs
         self.as_input = as_input
 
     def add_attribute(self, field: GraphQLTypeAttribute) -> None:
-        self.attrs.append(field)
+        self.attrs[field.graphql_name] = field
 
     def ref(self, nullable: bool = False) -> GraphQLReference:
         return GraphQLReference(self, nullable=nullable)
 
     def map_from_input(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
         mapped_kwargs: Dict[str, Any] = {}
-        for attr in self.attrs:
+        for attr in self.attrs.values():
             mapped_kwargs[
                 attr.python_name
-            ] = attr.attr_type.referenced_type.map_from_input(kwargs[attr.graphql_name])
+            ] = attr.type_reference.referenced_type.map_from_input(
+                kwargs[attr.graphql_name]
+            )
 
         return mapped_kwargs
 
     def map_to_output(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
         mapped_kwargs: Dict[str, Any] = {}
-        for attr in self.attrs:
+        for attr in self.attrs.values():
             mapped_kwargs[
                 attr.graphql_name
-            ] = attr.attr_type.referenced_type.map_to_output(kwargs[attr.python_name])
+            ] = attr.type_reference.referenced_type.map_to_output(
+                kwargs[attr.python_name]
+            )
 
         return mapped_kwargs
 
@@ -92,19 +97,50 @@ class GraphQLType(GraphQLDataType):
         decl = "input" if self.as_input else "type"
         return f"""
 {decl} {self.name} {{
-    {separator.join([attr.render() for attr in self.attrs])}
+    {separator.join([attr.render() for attr in self.attrs.values()])}
 }}
         """.strip()
 
 
+class GraphQLDelayedReference(GraphQLReference):
+    def __init__(
+        self, referenced_type: GraphQLDataType, nullable: bool = False
+    ) -> None:
+        super().__init__(referenced_type, nullable)
+
+    def render(self) -> str:
+        raise GraphQLRuntimeError(
+            f'Python ForwardRef "{self.referenced_type.name}" '
+            "must be resolved before rendering the GraphQL schema"
+        )
+
+
+class GraphQLDelayedType(GraphQLType):
+    def __init__(self, forward_ref: ForwardRef):
+        super().__init__(forward_ref.__forward_arg__, ForwardRef)
+
+    def ref(self, nullable: bool = False) -> GraphQLReference:
+        return GraphQLDelayedReference(referenced_type=self, nullable=nullable)
+
+    def render(self) -> str:
+        raise GraphQLRuntimeError(
+            f'Python ForwardRef "{self.name}" must be resolved'
+            "before rendering the GraphQL schema"
+        )
+
+
 class GraphQLArray(GraphQLDataType):
     def __init__(self, item_type: GraphQLReference):
-        super().__init__(python_type=list, name=f"[{item_type.render()}]")
+        if isinstance(item_type, GraphQLDelayedReference):
+            name = f"[{item_type.referenced_type.name}]"
+        else:
+            name = f"[{item_type.render()}]"
+        super().__init__(python_type=list, name=name)
 
         self.item_type = item_type
 
     def ref(self, nullable: bool = False) -> GraphQLReference:
-        return GraphQLReference(referenced_type=self, nullable=nullable)
+        return self.item_type.__class__(referenced_type=self, nullable=nullable)
 
 
 class GraphQLFunctionField(InjectableRequestType):

@@ -32,27 +32,32 @@ class GraphQLSchema:
     ) -> None:
         if graphql_type.name in self.inputs:
             raise GraphQLSchemaException(
-                f"Name {graphql_type.name} is already used as an input. Please specify another name!"
+                f"Name {graphql_type.name} is already used as an input. "
+                "Please specify another name!"
             )
         if graphql_type.name in self.types:
             raise GraphQLSchemaException(
-                f"Name {graphql_type.name} is already used as an type. Please specify another name!"
+                f"Name {graphql_type.name} is already used as an type. "
+                "Please specify another name!"
             )
         if graphql_type.name in self.scalars and not isinstance(
             graphql_type, GraphQLScalar
         ):
             raise GraphQLSchemaException(
-                f"Name {graphql_type.name} is already used as an scalar. Please specify another name!"
+                f"Name {graphql_type.name} is already used as an scalar. "
+                "Please specify another name!"
             )
 
     def check_function_name_conflict(self, graphql_type: GraphQLFunction) -> None:
         if graphql_type.name in self.queries:
             raise GraphQLSchemaException(
-                f"Name {graphql_type.name} is already used for a query. Please specify another name!"
+                f"Name {graphql_type.name} is already used for a query. "
+                "Please specify another name!"
             )
         if graphql_type.name in self.mutations:
             raise GraphQLSchemaException(
-                f"Name {graphql_type.name} is already used for a mutation. Please specify another name!"
+                f"Name {graphql_type.name} is already used for a mutation. "
+                "Please specify another name!"
             )
 
     def add_type(self, graphql_type: GraphQLType) -> None:

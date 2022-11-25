@@ -32,49 +32,49 @@ def factory() -> GraphQLTypeFactory:
 class TestFactoryTypeParsing:
     def test_int_type(self, factory: GraphQLTypeFactory) -> None:
         graphql_type, nullable = factory.create_graphql_type(
-            python_type=int, exclude_model_attrs=[], name=""
+            python_type=int, exclude_model_attrs=[], name="", context=None
         )
         assert not nullable
         assert isinstance(graphql_type, GraphQLInteger)
 
     def test_str_type(self, factory: GraphQLTypeFactory) -> None:
         graphql_type, nullable = factory.create_graphql_type(
-            python_type=str, exclude_model_attrs=[], name=""
+            python_type=str, exclude_model_attrs=[], name="", context=None
         )
         assert not nullable
         assert isinstance(graphql_type, GraphQLString)
 
     def test_float_type(self, factory: GraphQLTypeFactory) -> None:
         graphql_type, nullable = factory.create_graphql_type(
-            python_type=float, exclude_model_attrs=[], name=""
+            python_type=float, exclude_model_attrs=[], name="", context=None
         )
         assert not nullable
         assert isinstance(graphql_type, GraphQLFloat)
 
     def test_date_type(self, factory: GraphQLTypeFactory) -> None:
         graphql_type, nullable = factory.create_graphql_type(
-            python_type=date, exclude_model_attrs=[], name=""
+            python_type=date, exclude_model_attrs=[], name="", context=None
         )
         assert not nullable
         assert isinstance(graphql_type, GraphQLDate)
 
     def test_datetime_type(self, factory: GraphQLTypeFactory) -> None:
         graphql_type, nullable = factory.create_graphql_type(
-            python_type=datetime, exclude_model_attrs=[], name=""
+            python_type=datetime, exclude_model_attrs=[], name="", context=None
         )
         assert not nullable
         assert isinstance(graphql_type, GraphQLDateTime)
 
     def test_time_type(self, factory: GraphQLTypeFactory) -> None:
         graphql_type, nullable = factory.create_graphql_type(
-            python_type=time, exclude_model_attrs=[], name=""
+            python_type=time, exclude_model_attrs=[], name="", context=None
         )
         assert not nullable
         assert isinstance(graphql_type, GraphQLTime)
 
     def test_boolean_type(self, factory: GraphQLTypeFactory) -> None:
         graphql_type, nullable = factory.create_graphql_type(
-            python_type=bool, exclude_model_attrs=[], name=""
+            python_type=bool, exclude_model_attrs=[], name="", context=None
         )
         assert not nullable
         assert isinstance(graphql_type, GraphQLBoolean)
@@ -84,6 +84,7 @@ class TestFactoryTypeParsing:
             python_type=cast(Type[Optional[int]], Optional[int]),
             exclude_model_attrs=[],
             name="",
+            context=None,
         )
         assert nullable
         assert isinstance(graphql_type, GraphQLInteger)
@@ -93,6 +94,7 @@ class TestFactoryTypeParsing:
             python_type=cast(Type[Optional[str]], Optional[str]),
             exclude_model_attrs=[],
             name="",
+            context=None,
         )
         assert nullable
         assert isinstance(graphql_type, GraphQLString)
@@ -102,6 +104,7 @@ class TestFactoryTypeParsing:
             python_type=cast(Type[Optional[float]], Optional[float]),
             exclude_model_attrs=[],
             name="",
+            context=None,
         )
         assert nullable
         assert isinstance(graphql_type, GraphQLFloat)
@@ -111,6 +114,7 @@ class TestFactoryTypeParsing:
             python_type=cast(Type[Optional[date]], Optional[date]),
             exclude_model_attrs=[],
             name="",
+            context=None,
         )
         assert nullable
         assert isinstance(graphql_type, GraphQLDate)
@@ -120,6 +124,7 @@ class TestFactoryTypeParsing:
             python_type=cast(Type[Optional[datetime]], Optional[datetime]),
             exclude_model_attrs=[],
             name="",
+            context=None,
         )
         assert nullable
         assert isinstance(graphql_type, GraphQLDateTime)
@@ -129,6 +134,7 @@ class TestFactoryTypeParsing:
             python_type=cast(Type[Optional[time]], Optional[time]),
             exclude_model_attrs=[],
             name="",
+            context=None,
         )
         assert nullable
         assert isinstance(graphql_type, GraphQLTime)
@@ -138,6 +144,7 @@ class TestFactoryTypeParsing:
             python_type=cast(Type[Optional[bool]], Optional[bool]),
             exclude_model_attrs=[],
             name="",
+            context=None,
         )
         assert nullable
         assert isinstance(graphql_type, GraphQLBoolean)
@@ -147,7 +154,7 @@ class TestFactoryTypeParsing:
             ...
 
         graphql_type, nullable = factory.create_graphql_type(
-            python_type=Model, exclude_model_attrs=[], name=""
+            python_type=Model, exclude_model_attrs=[], name="", context=None
         )
         assert not nullable
         assert isinstance(graphql_type, GraphQLType)
@@ -160,6 +167,7 @@ class TestFactoryTypeParsing:
             python_type=cast(Type[Optional[Model]], Optional[Model]),
             exclude_model_attrs=[],
             name="",
+            context=None,
         )
         assert nullable
         assert isinstance(graphql_type, GraphQLType)
@@ -170,5 +178,5 @@ class TestFactoryTypeParsing:
 
         with pytest.raises(GraphQLFactoryException):
             _ = factory.create_graphql_type(
-                python_type=Model, exclude_model_attrs=[], name=""
+                python_type=Model, exclude_model_attrs=[], name="", context=None
             )

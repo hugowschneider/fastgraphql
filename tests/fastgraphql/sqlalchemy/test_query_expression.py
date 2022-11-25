@@ -36,7 +36,7 @@ class TestSQLQueryExpression:
         expected_graphql_def = """
 type TypeWithoutReferences {
     t_int: Int!
-} 
+}
             """.strip()
         self_graphql = SelfGraphQL.introspect(TypeWithoutReferences)
         assert self_graphql

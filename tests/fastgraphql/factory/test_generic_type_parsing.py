@@ -22,7 +22,7 @@ def factory() -> GraphQLTypeFactory:
 class TestFactoryGenericTypeParsing:
     def test_array_non_nullable(self, factory: GraphQLTypeFactory) -> None:
         graphql_type, nullable = factory.create_graphql_type(
-            python_type=List[bool], exclude_model_attrs=[], name=""
+            python_type=List[bool], exclude_model_attrs=[], name="", context=None
         )
 
         assert not nullable
@@ -35,7 +35,10 @@ class TestFactoryGenericTypeParsing:
         self, factory: GraphQLTypeFactory
     ) -> None:
         graphql_type, nullable = factory.create_graphql_type(
-            python_type=List[Optional[bool]], exclude_model_attrs=[], name=""
+            python_type=List[Optional[bool]],
+            exclude_model_attrs=[],
+            name="",
+            context=None,
         )
 
         assert not nullable
@@ -51,6 +54,7 @@ class TestFactoryGenericTypeParsing:
             python_type=cast(Type[Optional[List[bool]]], Optional[List[bool]]),
             exclude_model_attrs=[],
             name="",
+            context=None,
         )
 
         assert nullable
@@ -64,7 +68,7 @@ class TestFactoryGenericTypeParsing:
             ...
 
         graphql_type, nullable = factory.create_graphql_type(
-            python_type=List[Model], exclude_model_attrs=[], name=""
+            python_type=List[Model], exclude_model_attrs=[], name="", context=None
         )
 
         assert not nullable
@@ -83,6 +87,7 @@ class TestFactoryGenericTypeParsing:
             python_type=List[Optional[Model]],
             exclude_model_attrs=[],
             name="",
+            context=None,
         )
 
         assert not nullable
@@ -101,6 +106,7 @@ class TestFactoryGenericTypeParsing:
             python_type=cast(Type[Optional[List[Model]]], Optional[List[Model]]),
             exclude_model_attrs=[],
             name="",
+            context=None,
         )
 
         assert nullable
@@ -112,4 +118,4 @@ class TestFactoryGenericTypeParsing:
     def test_unsupported_generic(self, factory: GraphQLTypeFactory) -> None:
 
         with pytest.raises(GraphQLFactoryException):
-            factory.handle_generic_types(Dict[str, int])
+            factory.handle_generic_types(Dict[str, int], context=None)

@@ -41,7 +41,7 @@ input TypeWithoutReferences {
     t_opt_datatime: DateTime
     t_boolean: Boolean!
     t_opt_boolean: Boolean
-} 
+}
         """.strip()
         self_graphql = SelfGraphQL.introspect(TypeWithoutReferences)
         assert self_graphql
@@ -79,7 +79,7 @@ input Type1 {
     t_opt_float: Float
     t_datatime: DateTime!
     t_opt_datatime: DateTime
-} 
+}
             """.strip()
 
         self_graphql = SelfGraphQL.introspect(TypeWithoutReferences)
@@ -111,7 +111,7 @@ input Type1 {
 input TypeWithReference {
     t_int: Int!
     t_type_with_references: TypeWithoutReferences!
-} 
+}
         """.strip()
         self_graphql = SelfGraphQL.introspect(TypeWithReference)
         assert self_graphql
@@ -150,7 +150,7 @@ input TypeWithReference {
 input Type2 {
     t_int: Int!
     t_type_with_references: Type1!
-} 
+}
         """.strip()
         self_graphql = SelfGraphQL.introspect(TypeWithReference)
         assert self_graphql
@@ -192,7 +192,7 @@ input TypeWithoutReferences {
     t_opt_float: Float
     t_datatime: DateTime!
     t_opt_datatime: DateTime
-} 
+}
         """.strip()
         self_graphql = SelfGraphQL.introspect(TypeWithoutReferences)
         assert self_graphql

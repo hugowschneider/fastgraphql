@@ -5,6 +5,8 @@ from inspect import Parameter
 from typing import (
     Any,
     Callable,
+    Dict,
+    ForwardRef,
     List,
     Optional,
     Tuple,
@@ -19,6 +21,7 @@ from typing import (
 from pydantic import BaseModel
 from pydantic.fields import ModelField
 
+from fastgraphql.context import AdaptContext
 from fastgraphql.exceptions import GraphQLFactoryException
 from fastgraphql.injection import Injectable, InjectableFunction
 from fastgraphql.scalars import (
@@ -35,6 +38,7 @@ from fastgraphql.schema import GraphQLSchema, SelfGraphQL
 from fastgraphql.types import (
     GraphQLArray,
     GraphQLDataType,
+    GraphQLDelayedType,
     GraphQLFunction,
     GraphQLFunctionField,
     GraphQLType,
@@ -57,8 +61,8 @@ class _DateFormats:
 
 class GraphQLTypeFactory:
     """
-    GraphQL type factory produces GraphQL definition based on SQLAlchemy and Pydantic models. The definition include
-    schemas and input types.
+    GraphQL type factory produces GraphQL definition based on SQLAlchemy and
+    Pydantic models. The definition include schemas and input types.
     """
 
     def __init__(
@@ -73,39 +77,62 @@ class GraphQLTypeFactory:
         self.input_factory = input_factory
         self.date_formats = date_formats
         self.sqlalchemy_base: Optional[Type[Any]] = None
+        self.delayed_definitions: Dict[str, List[AdaptContext]] = {}
 
     def handle_generic_types(
-        self, python_type: Type[Any]
+        self,
+        python_type: Type[Any],
+        context: Optional[AdaptContext],
     ) -> Tuple[GraphQLDataType, bool]:
         if (
             get_origin(python_type) == Union
             and Optional[get_args(python_type)[0]] == python_type
         ):
-            inner_type, _ = self.create_graphql_type(get_args(python_type)[0])
+            inner_type, _ = self.create_graphql_type(
+                get_args(python_type)[0], context=context
+            )
             return inner_type, True
         if issubclass(cast(type, get_origin(python_type)), List):
-            inner_type, nullable = self.create_graphql_type(get_args(python_type)[0])
+            inner_type, nullable = self.create_graphql_type(
+                get_args(python_type)[0],
+                context=context.list_context() if context else None,
+            )
             return GraphQLArray(inner_type.ref(nullable=nullable)), False
 
         raise GraphQLFactoryException(
-            f"Generic type {python_type.__class__} is still not implemented. Only supported types are Optional and List"
+            f"Generic type {python_type.__class__} is still"
+            "not implemented. Only supported types are Optional and List"
         )
+
+    def delay_definition(self, type_name: str, context: AdaptContext) -> None:
+        if type_name not in self.delayed_definitions:
+            self.delayed_definitions[type_name] = []
+        self.delayed_definitions[type_name].append(context)
 
     def create_graphql_type(
         self,
         python_type: Type[Any],
+        context: Optional[AdaptContext],
         default_names: Optional[DefaultNames] = None,
         exclude_model_attrs: Optional[List[str]] = None,
         name: Optional[str] = None,
     ) -> Tuple[GraphQLDataType, bool]:
 
+        if isinstance(python_type, ForwardRef):
+            if python_type.__forward_evaluated__:
+                python_type = python_type.__forward_value__
+            else:
+                self.delay_definition(python_type.__forward_arg__, context)
+                return GraphQLDelayedType(python_type), False
+
         if get_origin(python_type):
-            return self.handle_generic_types(python_type=python_type)
+            return self.handle_generic_types(python_type=python_type, context=context)
         if issubclass(python_type, BaseModel):
             return (
                 self.adapt_pydantic_graphql(
                     python_type=python_type,
                     name=name,
+                    context=context,
                     exclude_model_attrs=exclude_model_attrs,
                     default_names=default_names,
                 ),
@@ -116,6 +143,7 @@ class GraphQLTypeFactory:
             return self.handle_sqlalchemy_type(
                 python_type=python_type,
                 name=name,
+                context=context,
                 exclude_model_attrs=exclude_model_attrs,
                 default_names=next(
                     (
@@ -141,7 +169,8 @@ class GraphQLTypeFactory:
             return GraphQLDate(self.date_formats.date_format), False
 
         raise GraphQLFactoryException(
-            f"Type {python_type.__class__.__name__} is still not implement but pydantic should have caught this error"
+            f"Type {python_type.__class__.__name__} is"
+            "still not implement but pydantic should have caught this error"
         )
 
     def handle_sqlalchemy_type(
@@ -150,18 +179,21 @@ class GraphQLTypeFactory:
         name: Optional[str],
         exclude_model_attrs: Optional[List[str]],
         default_names: DefaultNames,
+        context: Optional[AdaptContext],
     ) -> Tuple[GraphQLDataType, bool]:
         from fastgraphql.sqlalchemy import adapt_sqlalchemy_graphql
 
         def parse_function(
             python_type_: Type[Any],
-            exclude_model_attrs_: Optional[List[str]] = None,
-            name_: Optional[str] = None,
+            exclude_model_attrs_: Optional[List[str]],
+            name_: Optional[str],
+            context_: Optional[AdaptContext],
         ) -> Tuple[GraphQLDataType, bool]:
             return self.create_graphql_type(
                 python_type=python_type_,
                 exclude_model_attrs=exclude_model_attrs_,
                 name=name_,
+                context=context_,
             )
 
         return (
@@ -169,6 +201,7 @@ class GraphQLTypeFactory:
                 python_type=python_type,
                 name=name,
                 schema=self.schema,
+                context=context,
                 exclude_model_attrs=exclude_model_attrs,
                 parse_type_func=parse_function,
                 as_input=self.input_factory,
@@ -180,6 +213,7 @@ class GraphQLTypeFactory:
     def adapt_pydantic_graphql(
         self,
         python_type: Type[T],
+        context: Optional[AdaptContext],
         name: Optional[str] = None,
         exclude_model_attrs: Optional[List[str]] = None,
         default_names: Optional[DefaultNames] = None,
@@ -208,45 +242,82 @@ class GraphQLTypeFactory:
         graphql_type = GraphQLType(
             name=name, as_input=self.input_factory, python_type=python_type
         )
-        for _, field in python_type.__fields__.items():
-            if field.name in exclude_model_attrs:
-                continue
-            graphql_attr_type, nullable = self.model_field_factory(field)
-
-            if "graphql_name" in field.field_info.extra:
-                field_name = field.field_info.extra["graphql_name"]
-            else:
-                field_name = defaults(field.name)
-
-            graphql_type.add_attribute(
-                GraphQLTypeAttribute(
-                    graphql_name=field_name,
-                    python_name=field.name,
-                    attr_type=graphql_attr_type.ref(
-                        nullable=field.allow_none or nullable
-                    ),
-                )
-            )
 
         SelfGraphQL.add_type_metadata(
             python_type=python_type,
             graphql_type=graphql_type,
             as_input=self.input_factory,
         )
+
+        for _, field in python_type.__fields__.items():
+            if field.name in exclude_model_attrs:
+                continue
+
+            if "graphql_name" in field.field_info.extra:
+                field_name = field.field_info.extra["graphql_name"]
+            else:
+                field_name = defaults(field.name)
+
+            graphql_attr_type, nullable = self.model_field_factory(
+                field,
+                AdaptContext(
+                    parent_context=context,
+                    graphql_field=field_name,
+                    python_field=field.name,
+                    graphql_type=graphql_type,
+                ),
+            )
+
+            graphql_type.add_attribute(
+                GraphQLTypeAttribute(
+                    graphql_name=field_name,
+                    python_name=field.name,
+                    type_reference=graphql_attr_type.ref(
+                        nullable=field.allow_none or nullable
+                    ),
+                )
+            )
+
         if self.input_factory:
             self.schema.add_input_type(graphql_type=graphql_type)
         else:
             self.schema.add_type(graphql_type=graphql_type)
+
+        if python_type.__name__ in self.delayed_definitions:
+            for context_ in self.delayed_definitions[python_type.__name__]:
+                delayed_attr = context_.graphql_type.attrs[context_.graphql_field]
+                if context_.in_list:
+                    array_type = delayed_attr.type_reference.referenced_type
+                    assert isinstance(array_type, GraphQLArray)
+                    attr_type = GraphQLArray(
+                        graphql_type.ref(array_type.item_type.nullable)
+                    ).ref(delayed_attr.type_reference.nullable)
+                else:
+                    attr_type = graphql_type.ref(delayed_attr.type_reference.nullable)
+                context_.graphql_type.attrs[
+                    context_.graphql_field
+                ] = GraphQLTypeAttribute(
+                    graphql_name=context_.graphql_field,
+                    python_name=context_.python_field,
+                    type_reference=attr_type,
+                )
+
+            del self.delayed_definitions[python_type.__name__]
+
         return graphql_type
 
-    def model_field_factory(self, field: ModelField) -> Tuple[GraphQLDataType, bool]:
+    def model_field_factory(
+        self, field: ModelField, context: AdaptContext
+    ) -> Tuple[GraphQLDataType, bool]:
         if "graphql_type" in field.field_info.extra:
             graphql_attr_type, nullable = (
                 field.field_info.extra["graphql_type"],
                 field.allow_none,
             )
         else:
-            graphql_attr_type, nullable = self.create_graphql_type(field.annotation)
+            graphql_attr_type, nullable = self.create_graphql_type(
+                python_type=field.annotation, context=context
+            )
         if (
             isinstance(graphql_attr_type, GraphQLScalar)
             and not graphql_attr_type.default_scalar
@@ -292,12 +363,13 @@ class GraphQLFunctionFactory:
 
         if func_signature.return_annotation == inspect.Parameter.empty:
             raise GraphQLFactoryException(
-                f"{'Mutation' if self.mutation_factory else 'Query'} {name} implemented in {func.__qualname__}"
+                f"{'Mutation' if self.mutation_factory else 'Query'} "
+                f"{name} implemented in {func.__qualname__}"
                 f" does not have a return type annotation"
             )
 
         graphql_type, nullable = self.type_factory.create_graphql_type(
-            func_signature.return_annotation
+            func_signature.return_annotation, context=None
         )
 
         graphql_query = GraphQLFunction(
@@ -331,10 +403,11 @@ class GraphQLFunctionFactory:
         func_parameter.set_python_name(param_name)
         if definition.annotation == inspect.Parameter.empty:
             raise GraphQLFactoryException(
-                f"Method {func.__qualname__} defines a {GraphQLFunctionField.__name__} without type definition."
+                f"Method {func.__qualname__} defines a {GraphQLFunctionField.__name__} "
+                "without type definition."
             )
         graphql_type, nullable = self.input_factory.create_graphql_type(
-            definition.annotation
+            definition.annotation, context=None
         )
         if func_parameter.reference:
             graphql_type = func_parameter.reference.referenced_type
