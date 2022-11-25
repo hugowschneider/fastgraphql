@@ -137,7 +137,9 @@ class SelfGraphQL:
         type_: Union[Type[Any], Callable[..., Any]]
     ) -> Union["SelfGraphQL", None]:
         if hasattr(type_, "__graphql__"):
-            return cast(SelfGraphQL, getattr(type_, "__graphql__"))
+            graphql_dict = cast(Dict[str, SelfGraphQL], getattr(type_, "__graphql__"))
+            if type_.__name__ in graphql_dict:
+                return graphql_dict[type_.__name__]
         return None
 
     @staticmethod
@@ -156,7 +158,12 @@ class SelfGraphQL:
         cls, python_type: Type[T], graphql_type: GraphQLType, as_input: bool
     ) -> None:
         if not hasattr(python_type, "__graphql__"):
-            setattr(python_type, "__graphql__", SelfGraphQLType())
+            setattr(python_type, "__graphql__", {})
+
+        graphql_dict = getattr(python_type, "__graphql__")
+        if python_type.__name__ not in graphql_dict:
+            graphql_dict[python_type.__name__] = SelfGraphQLType()
+
         if i := SelfGraphQL.introspect(python_type):
             if as_input:
                 i.as_input = graphql_type
@@ -171,7 +178,12 @@ class SelfGraphQL:
         as_mutation: bool = False,
     ) -> None:
         if not hasattr(func, "__graphql__"):
-            setattr(func, "__graphql__", SelfGraphQLFunction())
+            setattr(func, "__graphql__", {})
+
+        graphql_dict = getattr(func, "__graphql__")
+        if func.__name__ not in graphql_dict:
+            graphql_dict[func.__name__] = SelfGraphQLFunction()
+
         if i := SelfGraphQL.introspect(func):
             if as_mutation:
                 i.as_mutation = graphql_function

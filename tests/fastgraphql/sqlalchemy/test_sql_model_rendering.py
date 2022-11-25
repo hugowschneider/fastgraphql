@@ -16,13 +16,13 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 from fastgraphql import FastGraphQL
+from fastgraphql.context import AdaptContext
 from fastgraphql.exceptions import GraphQLFactoryException
 from fastgraphql.scalars import GraphQLID
 from fastgraphql.schema import GraphQLSchema, SelfGraphQL
 from fastgraphql.sqlalchemy import adapt_sqlalchemy_graphql
 from fastgraphql.types import GraphQLDataType
 from fastgraphql.utils import DefaultToCamelCase
-from fastgraphql.context import AdaptContext
 
 TEST_TABLE_ID = "test1.id"
 
