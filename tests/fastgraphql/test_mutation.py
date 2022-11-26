@@ -38,7 +38,7 @@ type Mutation {{
             return ""  # pragma: no cover
 
         expected_query_definition = """
-q1: String!        
+q1: String!
         """.strip()
 
         expected_graphql_definition = f"""
@@ -71,8 +71,8 @@ type Mutation {{
             return ""  # pragma: no cover
 
         expected_query_definition = """
-sample_mutation(t_int: Int!, t_opt_int: Int, t_str: String!, t_opt_str: String, t_float: Float!, t_opt_float: Float, t_datatime: DateTime!, t_opt_datatime: DateTime, t_boolean: Boolean!, t_opt_boolean: Boolean): String!        
-        """.strip()
+sample_mutation(t_int: Int!, t_opt_int: Int, t_str: String!, t_opt_str: String, t_float: Float!, t_opt_float: Float, t_datatime: DateTime!, t_opt_datatime: DateTime, t_boolean: Boolean!, t_opt_boolean: Boolean): String!
+        """.strip()  # noqa
 
         expected_graphql_definition = f"""
 scalar DateTime
@@ -97,7 +97,7 @@ type Mutation {{
             return ""  # pragma: no cover
 
         expected_query_definition = """
-sample_mutation(x: Int!): String!        
+sample_mutation(x: Int!): String!
         """.strip()
 
         expected_graphql_definition = f"""
@@ -123,7 +123,7 @@ type Mutation {{
             return ""  # pragma: no cover
 
         expected_query_definition = """
-sample_mutation(x: CustomScalar!): String!        
+sample_mutation(x: CustomScalar!): String!
         """.strip()
 
         expected_graphql_definition = f"""
@@ -153,7 +153,7 @@ type Mutation {{
             return ""  # pragma: no cover
 
         expected_query_definition = """
-sample_mutation(model1: Model!, model2: Model!): String!        
+sample_mutation(model1: Model!, model2: Model!): String!
         """.strip()
 
         expected_graphql_definition = f"""
@@ -186,7 +186,7 @@ type Mutation {{
             return Model()  # pragma: no cover
 
         expected_query_definition = """
-sample_mutation: Model!        
+sample_mutation: Model!
         """.strip()
 
         expected_graphql_definition = f"""

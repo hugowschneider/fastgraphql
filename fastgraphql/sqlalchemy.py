@@ -2,6 +2,7 @@ import logging
 
 from typing import Any, Callable, List, Optional, Tuple, Type, TypeVar
 
+from fastgraphql.context import AdaptContext
 from fastgraphql.exceptions import GraphQLFactoryException
 from fastgraphql.scalars import GraphQLScalar
 from fastgraphql.schema import GraphQLSchema, SelfGraphQL
@@ -16,7 +17,7 @@ from fastgraphql.utils import DefaultNames, DefaultUnchanged
 try:
     from sqlalchemy import ARRAY, Column
     from sqlalchemy.exc import NoInspectionAvailable
-    from sqlalchemy.inspection import inspect as inspect
+    from sqlalchemy.inspection import inspect
     from sqlalchemy.orm import Mapper, RelationshipProperty
     from sqlalchemy.sql.type_api import TypeEngine
 
@@ -25,8 +26,9 @@ except ImportError as e:  # pragma: no cover
 
 T = TypeVar("T")
 
-CREATE_GRAPHQL_TYPE_SIGNATURE = Callable[
-    [Type[Any], Optional[List[str]], Optional[str]], Tuple[GraphQLDataType, bool]
+CreateGraphQLTypeSignature = Callable[
+    [Type[Any], Optional[List[str]], Optional[str], Optional[AdaptContext]],
+    Tuple[GraphQLDataType, bool],
 ]
 
 logger = logging.getLogger(__name__)
@@ -34,11 +36,12 @@ logger = logging.getLogger(__name__)
 
 def adapt_sqlalchemy_graphql(
     python_type: Type[T],
-    parse_type_func: CREATE_GRAPHQL_TYPE_SIGNATURE,
+    parse_type_func: CreateGraphQLTypeSignature,
     schema: GraphQLSchema,
     name: Optional[str],
     exclude_model_attrs: Optional[List[str]],
     as_input: bool,
+    context: Optional[AdaptContext],
     default_names: DefaultNames = DefaultUnchanged(),
 ) -> GraphQLType:
 
@@ -62,6 +65,10 @@ def adapt_sqlalchemy_graphql(
     column: Column[Any]
     graphql_type = GraphQLType(name=name, as_input=as_input, python_type=python_type)
 
+    SelfGraphQL.add_type_metadata(
+        python_type=python_type, graphql_type=graphql_type, as_input=as_input
+    )
+
     for column in mapper.columns:
         if not isinstance(column, Column):
             logger.warning(
@@ -82,6 +89,12 @@ def adapt_sqlalchemy_graphql(
                 parse_type_func=parse_type_func,
                 schema=schema,
                 default_names=default_names,
+                context=AdaptContext(
+                    graphql_type=graphql_type,
+                    python_field="",
+                    graphql_field="",
+                    parent_context=context,
+                ),
             )
         )
 
@@ -93,6 +106,7 @@ def adapt_sqlalchemy_graphql(
         parse_type_func=parse_type_func,
         as_input=as_input,
         default_names=default_names,
+        context=context,
     )
 
     for column in foreign_columns:
@@ -102,12 +116,10 @@ def adapt_sqlalchemy_graphql(
                 parse_type_func=parse_type_func,
                 schema=schema,
                 default_names=default_names,
+                context=context,
             )
         )
 
-    SelfGraphQL.add_type_metadata(
-        python_type=python_type, graphql_type=graphql_type, as_input=as_input
-    )
     if as_input:
         schema.add_input_type(graphql_type=graphql_type)
     else:
@@ -121,9 +133,10 @@ def adapt_relation(
     mapper: Mapper,
     foreign_columns: List[Column[Any]],
     schema: GraphQLSchema,
-    parse_type_func: CREATE_GRAPHQL_TYPE_SIGNATURE,
+    parse_type_func: CreateGraphQLTypeSignature,
     as_input: bool,
     default_names: DefaultNames,
+    context: Optional[AdaptContext],
 ) -> None:
     relation: RelationshipProperty[Any]
     for relation in mapper.relationships:
@@ -132,42 +145,52 @@ def adapt_relation(
             GraphQLTypeAttribute(
                 graphql_name=default_names(relation.key),
                 python_name=relation.key,
-                attr_type=adapt_sqlalchemy_graphql(
+                type_reference=adapt_sqlalchemy_graphql(
                     python_type=relation.mapper.entity,
                     schema=schema,
                     as_input=as_input,
                     parse_type_func=parse_type_func,
                     name=None,
                     exclude_model_attrs=None,
+                    context=context,
                 ).ref(nullable=nullable),
             )
         )
 
-        for column in relation.local_columns:
-            foreign_columns.remove(column)
+        if all(
+            [p[0].table.name == p[1].table.name for p in relation.local_remote_pairs]
+        ):
+            for column in relation.remote_side:
+                foreign_columns.remove(column)
+        else:
+            for column in relation.local_columns:
+                foreign_columns.remove(column)
 
 
 def parse_sql_type(
-    sql_type: TypeEngine[Any], parse_type_func: CREATE_GRAPHQL_TYPE_SIGNATURE
+    sql_type: TypeEngine[Any],
+    parse_type_func: CreateGraphQLTypeSignature,
+    context: Optional[AdaptContext],
 ) -> Tuple[GraphQLDataType, bool]:
     if isinstance(sql_type, ARRAY):
         item_type, nullable = parse_sql_type(
-            sql_type.item_type, parse_type_func=parse_type_func
+            sql_type.item_type, parse_type_func=parse_type_func, context=context
         )
 
         return GraphQLArray(item_type=item_type.ref(nullable=nullable)), False
     else:
-        return parse_type_func(sql_type.python_type, None, None)
+        return parse_type_func(sql_type.python_type, None, None, context)
 
 
 def adapt_column(
     column: Column[Any],
-    parse_type_func: CREATE_GRAPHQL_TYPE_SIGNATURE,
+    parse_type_func: CreateGraphQLTypeSignature,
     schema: GraphQLSchema,
     default_names: DefaultNames,
+    context: Optional[AdaptContext],
 ) -> GraphQLTypeAttribute:
     graphql_type, nullable = parse_sql_type(
-        sql_type=column.type, parse_type_func=parse_type_func
+        sql_type=column.type, parse_type_func=parse_type_func, context=context
     )
     if isinstance(graphql_type, GraphQLScalar) and not graphql_type.default_scalar:
         schema.add_scalar(graphql_type)
@@ -182,5 +205,5 @@ def adapt_column(
     return GraphQLTypeAttribute(
         graphql_name=graphql_name,
         python_name=column.name,
-        attr_type=graphql_type.ref(nullable=column.nullable),
+        type_reference=graphql_type.ref(nullable=column.nullable),
     )

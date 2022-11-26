@@ -245,7 +245,7 @@ query {
 query {
     query_function_input_injection(input: {
         id: 1
-        name : "name"        
+        name : "name"
     })
 }
         """.strip()
@@ -276,7 +276,7 @@ query {
 query {
     query_function_path_input_injection(input: {
         id: 1
-        name : "name"        
+        name : "name"
     })
 }
         """.strip()

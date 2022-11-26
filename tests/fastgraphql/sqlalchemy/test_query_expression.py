@@ -24,7 +24,7 @@ def fast_graphql() -> FastGraphQL:
 
 class TestSQLQueryExpression:
     def test_query_expression(self, fast_graphql: FastGraphQL) -> None:
-        Base = declarative_base()  # type: Any # NOSONAR
+        Base: Any = declarative_base()  # NOSONAR
         fast_graphql.set_sqlalchemy_base(Base)
 
         @fast_graphql.type()
@@ -36,7 +36,7 @@ class TestSQLQueryExpression:
         expected_graphql_def = """
 type TypeWithoutReferences {
     t_int: Int!
-} 
+}
             """.strip()
         self_graphql = SelfGraphQL.introspect(TypeWithoutReferences)
         assert self_graphql

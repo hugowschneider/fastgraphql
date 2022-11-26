@@ -165,7 +165,7 @@ query Query(
             t_datatime: $t_datatime,
             t_opt_datatime: $t_opt_datatime,
             t_boolean: $t_boolean,
-            t_opt_boolean: $t_opt_boolean, 
+            t_opt_boolean: $t_opt_boolean,
     )
 }
         """.strip()
@@ -245,7 +245,7 @@ query Query(
             t_datatime: $t_datatime,
             t_opt_datatime: $t_opt_datatime,
             t_boolean: $t_boolean,
-            t_opt_boolean: $t_opt_boolean, 
+            t_opt_boolean: $t_opt_boolean,
     )
 }
         """.strip()
@@ -356,7 +356,7 @@ query Query(
     ) {
         model {
             t_int
-            t_date        
+            t_date
         }
     }
 }
@@ -517,7 +517,7 @@ query Query(
             $typeInt: Int!,
 ){
     query_custom_param_name(
-            typeInt: $typeInt, 
+            typeInt: $typeInt,
     )
 }
         """.strip()
@@ -551,7 +551,7 @@ query Query(
             $tInt: Int!,
 ){
     queryCamelCase(
-            tInt: $tInt, 
+            tInt: $tInt,
     )
 }
         """.strip()

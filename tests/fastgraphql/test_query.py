@@ -17,7 +17,7 @@ class TestQueryRendering:
             return ""  # pragma: no cover
 
         expected_query_definition = """
-sample_query: String!        
+sample_query: String!
         """.strip()
 
         expected_graphql_definition = f"""
@@ -39,7 +39,7 @@ type Query {{
             return ""  # pragma: no cover
 
         expected_query_definition = """
-q1: String!        
+q1: String!
         """.strip()
 
         expected_graphql_definition = f"""
@@ -72,8 +72,8 @@ type Query {{
             return ""  # pragma: no cover
 
         expected_query_definition = """
-sample_query(t_int: Int!, t_opt_int: Int, t_str: String!, t_opt_str: String, t_float: Float!, t_opt_float: Float, t_datatime: DateTime!, t_opt_datatime: DateTime, t_boolean: Boolean!, t_opt_boolean: Boolean): String!        
-        """.strip()
+sample_query(t_int: Int!, t_opt_int: Int, t_str: String!, t_opt_str: String, t_float: Float!, t_opt_float: Float, t_datatime: DateTime!, t_opt_datatime: DateTime, t_boolean: Boolean!, t_opt_boolean: Boolean): String!
+        """.strip()  # noqa
 
         expected_graphql_definition = f"""
 scalar DateTime
@@ -98,7 +98,7 @@ type Query {{
             return ""  # pragma: no cover
 
         expected_query_definition = """
-sample_query(x: Int!): String!        
+sample_query(x: Int!): String!
         """.strip()
 
         expected_graphql_definition = f"""
@@ -124,7 +124,7 @@ type Query {{
             return ""  # pragma: no cover
 
         expected_query_definition = """
-sample_query(x: CustomScalar!): String!        
+sample_query(x: CustomScalar!): String!
         """.strip()
 
         expected_graphql_definition = f"""
@@ -154,7 +154,7 @@ type Query {{
             return ""  # pragma: no cover
 
         expected_query_definition = """
-sample_query(model1: Model!, model2: Model!): String!        
+sample_query(model1: Model!, model2: Model!): String!
         """.strip()
 
         expected_graphql_definition = f"""
@@ -183,7 +183,7 @@ type Query {{
             return Model()  # pragma: no cover
 
         expected_query_definition = """
-sample_query: Model!        
+sample_query: Model!
         """.strip()
 
         expected_graphql_definition = f"""

@@ -103,7 +103,7 @@ query IntrospectionQuery {
 
         query = """
 query {
-    sample_query 
+    sample_query
 }
 """.strip()
         response = self.test_client.post(GRAPHQL_URL, json={"query": query})
@@ -115,7 +115,7 @@ query {
 
         query = """
 mutation {
-    sample_mutation 
+    sample_mutation
 }
 """.strip()
         response = self.test_client.post(GRAPHQL_URL, json={"query": query})
@@ -153,7 +153,7 @@ mutation {
 
         query = """
         mutation {
-            dependency_does_not_exist 
+            dependency_does_not_exist
         }
         """.strip()
         response = self.test_client.post(

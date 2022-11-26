@@ -10,5 +10,5 @@ class GraphQLFactoryException(Exception):
     ...
 
 
-class GraphQLRunTimeError(Exception):
+class GraphQLRuntimeError(Exception):
     ...
