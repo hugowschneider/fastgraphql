@@ -1,6 +1,6 @@
 import logging
 
-from typing import Any, Callable, List, Optional, Tuple, Type, TypeVar, cast
+from typing import Any, Callable, List, Optional, Tuple, Type, TypeVar
 
 from fastgraphql.context import AdaptContext
 from fastgraphql.exceptions import GraphQLFactoryException
@@ -192,10 +192,7 @@ def adapt_column(
     graphql_type, nullable = parse_sql_type(
         sql_type=column.type, parse_type_func=parse_type_func, context=context
     )
-    if (
-        isinstance(graphql_type, GraphQLScalar)
-        and not cast(GraphQLScalar, graphql_type).default_scalar
-    ):
+    if isinstance(graphql_type, GraphQLScalar) and not graphql_type.default_scalar:
         schema.add_scalar(graphql_type)
     if "graphql_name" in column.info:
         graphql_name = column.info["graphql_name"]

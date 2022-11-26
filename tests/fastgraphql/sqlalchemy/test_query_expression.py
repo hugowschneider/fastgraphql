@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 
 from sqlalchemy import Column, Integer
@@ -22,7 +24,7 @@ def fast_graphql() -> FastGraphQL:
 
 class TestSQLQueryExpression:
     def test_query_expression(self, fast_graphql: FastGraphQL) -> None:
-        Base = declarative_base()  # type: Any # NOSONAR
+        Base: Any = declarative_base()  # NOSONAR
         fast_graphql.set_sqlalchemy_base(Base)
 
         @fast_graphql.type()

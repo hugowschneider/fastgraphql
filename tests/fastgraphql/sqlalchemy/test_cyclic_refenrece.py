@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 from sqlalchemy import Column, ForeignKey, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -9,7 +11,7 @@ class TestSQLCyclicReference:
     def test_self_reference(self) -> None:
 
         fast_graphql = FastGraphQL()
-        Base = declarative_base()  # type: Any # NOSONAR
+        Base: Any = declarative_base()  # NOSONAR
         fast_graphql.set_sqlalchemy_base(Base)
 
         @fast_graphql.type()
@@ -17,7 +19,7 @@ class TestSQLCyclicReference:
             __tablename__ = "model1"
             id = Column(Integer, primary_key=True)
             model1_id = Column(Integer, ForeignKey("model1.id"))
-            model1 = relationship("Model1")
+            model1: "Model1" = cast("Model1", relationship("Model1"))  # noqa
 
         assert (
             fast_graphql.render()
