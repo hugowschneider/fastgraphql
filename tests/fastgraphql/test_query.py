@@ -200,3 +200,64 @@ type Query {{
         assert self_graphql.as_query
         assert self_graphql.as_query.render() == expected_query_definition
         assert fast_graphql.render() == expected_graphql_definition
+
+    def test_query_implict_parameters(self) -> None:
+        fast_graphql = FastGraphQL()
+
+        class Model(BaseModel):
+            t_int: int
+
+        @fast_graphql.query()
+        def sample_query(
+            model1: Model,
+            string: Optional[str],
+        ) -> str:
+            return ""  # pragma: no cover
+
+        expected_query_definition = """
+sample_query(model1: Model!, string: String): String!
+        """.strip()
+
+        expected_graphql_definition = f"""
+input Model {{
+    t_int: Int!
+}}
+
+type Query {{
+    {expected_query_definition}
+}}""".strip()
+
+        self_graphql = SelfGraphQL.introspect(sample_query)
+        assert self_graphql
+        assert self_graphql.as_query
+        assert self_graphql.as_query.render() == expected_query_definition
+        assert fast_graphql.render() == expected_graphql_definition
+
+    def test_query_ignore_parameters(self) -> None:
+        fast_graphql = FastGraphQL()
+
+        class Model(BaseModel):
+            t_int: int
+
+        @fast_graphql.query()
+        def sample_query(model1: Model, string: Optional[str], integer: int = 1) -> str:
+            return ""  # pragma: no cover
+
+        expected_query_definition = """
+sample_query(model1: Model!, string: String): String!
+        """.strip()
+
+        expected_graphql_definition = f"""
+input Model {{
+    t_int: Int!
+}}
+
+type Query {{
+    {expected_query_definition}
+}}""".strip()
+
+        self_graphql = SelfGraphQL.introspect(sample_query)
+        assert self_graphql
+        assert self_graphql.as_query
+        assert self_graphql.as_query.render() == expected_query_definition
+        assert fast_graphql.render() == expected_graphql_definition
