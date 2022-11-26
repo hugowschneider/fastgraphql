@@ -8,7 +8,7 @@ theme:
   features:
     - navigation.instant
     - navigation.expand
-    - navigation.indexes  
+    - navigation.indexes
   palette:
     - media: '(prefers-color-scheme: light)'
       scheme: default
@@ -41,7 +41,7 @@ markdown_extensions:
   - admonition
   - tables
   - pymdownx.snippets:
-      base_path: 'src/'  
+      base_path: 'src/'
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
@@ -63,5 +63,5 @@ nav:
     - tutorial/index.md
     - tutorial/data-types.md
     - tutorial/simple-classes.md
+    - tutorial/complex-classes.md
     - tutorial/query-mutation.md
-    

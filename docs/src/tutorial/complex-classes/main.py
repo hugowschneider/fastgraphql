@@ -26,8 +26,23 @@ class Person(BaseModel):
 
 @fast_graphql.query()
 def get_person() -> Person:
-    return Person(first_name="Luke", last_name="Skywalker", height=1.7, age=23)
+    return Person(
+        first_name="Luke",
+        last_name="Skywalker",
+        height=1.7,
+        age=23,
+        siblings=[
+            Person(
+                first_name="Leia",
+                last_name="Organa",
+                age=23,
+                height=1.6,
+                addresses=[],
+                siblings=[],
+            )
+        ],
+        addresses=[Address(planet="Tatooine")],
+    )
 
 
 app.include_router(make_ariadne_fastapi_router(fast_graphql=fast_graphql))
-print(fast_graphql.render())
