@@ -1,6 +1,6 @@
 import logging
 
-from typing import Any, Callable, List, Optional, Tuple, Type, TypeVar
+from typing import Any, Callable, List, Optional, Tuple, Type, TypeVar, cast
 
 from fastgraphql.context import AdaptContext
 from fastgraphql.exceptions import GraphQLFactoryException
@@ -26,7 +26,7 @@ except ImportError as e:  # pragma: no cover
 
 T = TypeVar("T")
 
-CREATE_GRAPHQL_TYPE_SIGNATURE = Callable[
+CreateGraphQLTypeSignature = Callable[
     [Type[Any], Optional[List[str]], Optional[str], Optional[AdaptContext]],
     Tuple[GraphQLDataType, bool],
 ]
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 def adapt_sqlalchemy_graphql(
     python_type: Type[T],
-    parse_type_func: CREATE_GRAPHQL_TYPE_SIGNATURE,
+    parse_type_func: CreateGraphQLTypeSignature,
     schema: GraphQLSchema,
     name: Optional[str],
     exclude_model_attrs: Optional[List[str]],
@@ -64,6 +64,10 @@ def adapt_sqlalchemy_graphql(
     foreign_columns = []
     column: Column[Any]
     graphql_type = GraphQLType(name=name, as_input=as_input, python_type=python_type)
+
+    SelfGraphQL.add_type_metadata(
+        python_type=python_type, graphql_type=graphql_type, as_input=as_input
+    )
 
     for column in mapper.columns:
         if not isinstance(column, Column):
@@ -116,9 +120,6 @@ def adapt_sqlalchemy_graphql(
             )
         )
 
-    SelfGraphQL.add_type_metadata(
-        python_type=python_type, graphql_type=graphql_type, as_input=as_input
-    )
     if as_input:
         schema.add_input_type(graphql_type=graphql_type)
     else:
@@ -132,7 +133,7 @@ def adapt_relation(
     mapper: Mapper,
     foreign_columns: List[Column[Any]],
     schema: GraphQLSchema,
-    parse_type_func: CREATE_GRAPHQL_TYPE_SIGNATURE,
+    parse_type_func: CreateGraphQLTypeSignature,
     as_input: bool,
     default_names: DefaultNames,
     context: Optional[AdaptContext],
@@ -156,13 +157,19 @@ def adapt_relation(
             )
         )
 
-        for column in relation.local_columns:
-            foreign_columns.remove(column)
+        if all(
+            [p[0].table.name == p[1].table.name for p in relation.local_remote_pairs]
+        ):
+            for column in relation.remote_side:
+                foreign_columns.remove(column)
+        else:
+            for column in relation.local_columns:
+                foreign_columns.remove(column)
 
 
 def parse_sql_type(
     sql_type: TypeEngine[Any],
-    parse_type_func: CREATE_GRAPHQL_TYPE_SIGNATURE,
+    parse_type_func: CreateGraphQLTypeSignature,
     context: Optional[AdaptContext],
 ) -> Tuple[GraphQLDataType, bool]:
     if isinstance(sql_type, ARRAY):
@@ -177,7 +184,7 @@ def parse_sql_type(
 
 def adapt_column(
     column: Column[Any],
-    parse_type_func: CREATE_GRAPHQL_TYPE_SIGNATURE,
+    parse_type_func: CreateGraphQLTypeSignature,
     schema: GraphQLSchema,
     default_names: DefaultNames,
     context: Optional[AdaptContext],
@@ -185,7 +192,10 @@ def adapt_column(
     graphql_type, nullable = parse_sql_type(
         sql_type=column.type, parse_type_func=parse_type_func, context=context
     )
-    if isinstance(graphql_type, GraphQLScalar) and not graphql_type.default_scalar:
+    if (
+        isinstance(graphql_type, GraphQLScalar)
+        and not cast(GraphQLScalar, graphql_type).default_scalar
+    ):
         schema.add_scalar(graphql_type)
     if "graphql_name" in column.info:
         graphql_name = column.info["graphql_name"]

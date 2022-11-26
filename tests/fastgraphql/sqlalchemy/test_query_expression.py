@@ -1,5 +1,3 @@
-from typing import Any
-
 import pytest
 
 from sqlalchemy import Column, Integer
