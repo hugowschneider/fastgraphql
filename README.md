@@ -1,5 +1,8 @@
 # FastGraphQL
-FastGraphQL is intended to help developer create code driven GraphQL APIs.
+![FastGraphQL](docs/pages/assets/logo_text.svg)
+<p style="text-align: center;">FastGraphQL is a tool for creating code driven GraphQL APIs.</p>
+
+----------
 
 ![pypi](https://img.shields.io/pypi/v/fastgraphql)
 ![Python Versions](https://img.shields.io/pypi/pyversions/fastgraphql.svg?color=%2334D058)
@@ -17,27 +20,49 @@ FastGraphQL is intended to help developer create code driven GraphQL APIs.
 [![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=hugowschneider_fastgraphql&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=hugowschneider_fastgraphql)
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=hugowschneider_fastgraphql&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=hugowschneider_fastgraphql)
 
+-------
+Documentation: <a href="https://hugowschneider.github.io/fastgraphql" target="_blank">https://hugowschneider.github.io/fastgraphql</a>
+
+Source Code: <a href="https://github.com/hugowschneider/fastgraphql" target="_blank">https://github.com/hugowschneider/fastgraphql</a>
+
 # Disclaimer
 
-*This is still a work in progress*
+*This is still a work in progress and all support is welcomed*
 
 # Motivation
 
 So far most of the projects that uses GraphQL need to duplicate
-many definitions to be able to have a consistent GraphQL API schema 
+many definitions to be able to have a consistent GraphQL API schema
 alongside well-defined models that governs the development and the application.
 
-FastGraphQL tries to shortcut the path between python models and GraphQL schema
-using **Pydantic** models. This ensures not only a single source of truth when comes to 
-type, inputs, query and mutation definition reflected in classes and methods, but also the
-ability to use **Pydantic** to validate models.
+FastGraphQL proposes to shortcut the path between python models and GraphQL schema
+using **Pydantic** models. This ensures not only a single source of truth when comes to
+type, input, query and mutation definitions, but also the
+ability to use **Pydantic** to features on models and inputs.
 
 # Installation
 
-```commandline
-pip install fastgraphql
+```shell
+$ pip install "fastgraphql[all]"
+```
+You will also need an ASGI server as well to serve your API
+
+```shell
+$ pip install "uvicorn[standard]"
 ```
 
+# Learn
+
+
+# Integration
+
+FastGraphQL generates independently of any integration a data structure containing all GraphQL definitions and resolvers, which
+can generate the GraphQL schema string.
+
+With that said, all integration will add functionalities and provide
+easy and alternative deployments of the defined API.
+
+For integration go to:
 
 # Usage
 
@@ -103,12 +128,12 @@ input Input {
 
 ## Query and Mutation
 
-Following the same approach with annotation driven defitions, query and mutations can
+Following the same approach with annotation driven definitions, query and mutations can
 easily be defined using `FastGraphQL.graphql_query` and `FastGraphQL.mutation`.
 
 Note that all function arguments annotated with `FastGraphQL.graphql_query_field`
-are considered to be input arguments for the GraphQL API and simples types and 
-**Pydantic** models can be used and arguments and also as return type and they don't 
+are considered to be input arguments for the GraphQL API and simple types and
+**Pydantic** models can be used and arguments and also as return type and they don't
 need to be explicitly annotated.
 
 ```python
@@ -156,7 +181,7 @@ type Query {
 }
 ```
 
-# Dependecy Injection
+# Dependency Injection
 Query and Mutation can have dependencies injected using `FastGraphQL.depende(...)` as showed bellow:`
 
 ```python
@@ -182,12 +207,12 @@ def my_first_query(
     ...
 
 ```
-In this example the parameter `dependecy` will be injected once the query is called. 
+In this example the parameter `dependecy` will be injected once the query is called.
 
 # Integrations
 
 ## Ariadne
-The developed GraphQL API can be easily integration 
+The developed GraphQL API can be easily integration
 with [Ariadne](https://ariadnegraphql.org).
 
 ```shell
@@ -195,11 +220,11 @@ pip install fastgraphql[ariadne]
 ```
 
 The method `make_executable_schema` in the module `fastgraphql.ariadne`
-can create the ariadne's executable schema to integrate to other
+can create the Ariadne's executable schema to integrate to other
 frameworks like FastAPI. See https://ariadnegraphql.org/docs/starlette-integration
 
 ## FastAPI
-The developed GraphQL API can be easily served using [Ariadne](https://ariadnegraphql.org).  
+The developed GraphQL API can be easily served using [Ariadne](https://ariadnegraphql.org).
 and [FastAPI](https://fastapi.tiangolo.com).
 
 ```shell
@@ -207,7 +232,7 @@ pip install fastgraphql[ariadne,fastapi]
 ```
 
 _Note that Ariadne is needed to serve GraphQL APIs through FastAPI
-because no other GraphQL framework are yet integrated_ 
+because no other GraphQL framework are yet integrated_
 
 To create the router that server the GraphQL API, `make_ariadne_fastapi_router`
 from the module `fastgraphql.fastapi` should be used. For example:
@@ -225,7 +250,7 @@ fast_graphql = FastGraphQL()
 app.include_router(
     make_ariadne_fastapi_router(fast_graphql=fast_graphql)
 )
-    
+
 
 
 ```
@@ -233,15 +258,15 @@ app.include_router(
 
 ## SQLAlchemy
 
-To integrate SQLAlchemy models to the GraphQL API first all 
+To integrate SQLAlchemy models to the GraphQL API first all
 dependency for SQLAlchemy should be installed using:
 
 ```shell
 pip install fastgraphql[sqlalchemy]
 ```
 
-SQLAlchemy, then, models can be incorporated to the GraphQL API 
-by first telling FastGraphQLwhat which is the base class to be 
+SQLAlchemy, then, models can be incorporated to the GraphQL API
+by first telling FastGraphQL what which is the base class to be
 considered:
 
 ```python
@@ -257,7 +282,7 @@ fast_graphql.set_sqlalchemy_base(Base)
 ```
 
 and after that, any SQLAlchemy model can be using as types and inputs.
-The models can also be used as query's and mutation's inputs and outpus. For example:
+The models can also be used as query's and mutation's inputs and outputs. For example:
 
 ```python
 from fastgraphql import FastGraphQL

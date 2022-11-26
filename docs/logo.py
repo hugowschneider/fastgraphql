@@ -38,11 +38,11 @@ def main() -> None:
     radius = 160
     circle_radius = 35
     dot_radian = math.pi / 3
-    line_width =16.6
+    line_width = 16.6
     border = 10
     inner_radius = radius / 2
 
-    size = radius * 2 + circle_radius *2 + border*2
+    size = radius * 2 + circle_radius * 2 + border * 2
 
     inner_coordinates = [
         (
@@ -114,7 +114,7 @@ def main() -> None:
 
     diff = (border + line_width / 2) / math.cos(dot_radian / 2)
     clip = drawing.defs.add(drawing.clipPath(id="background_clip"))
-    clip.translate(radius + circle_radius + border, radius + circle_radius + border)    
+    clip.translate(radius + circle_radius + border, radius + circle_radius + border)
     background_coordinates = [
         (
             (radius + diff) * math.cos(d * dot_radian),
@@ -122,11 +122,10 @@ def main() -> None:
         )
         for d in [0, 1, 2, 3, 4, 5]
     ]
-    
+
     for c1, c2 in pairs(coordinates):
         clip.add(drawing.circle(center=c1, r=circle_radius + border))
 
-    
     clip.add(drawing.polygon(background_coordinates))
 
     gradient = drawing.defs.add(
