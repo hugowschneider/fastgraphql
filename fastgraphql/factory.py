@@ -278,11 +278,18 @@ class GraphQLTypeFactory:
                 )
             )
 
+        self.resolve_delayed_types(python_type=python_type, graphql_type=graphql_type)
+
         if self.input_factory:
             self.schema.add_input_type(graphql_type=graphql_type)
         else:
             self.schema.add_type(graphql_type=graphql_type)
 
+        return graphql_type
+
+    def resolve_delayed_types(
+        self, python_type: Type[T], graphql_type: GraphQLType
+    ) -> None:
         if python_type.__name__ in self.delayed_definitions:
             for context_ in self.delayed_definitions[python_type.__name__]:
                 delayed_attr = context_.graphql_type.attrs[context_.graphql_field]
@@ -303,8 +310,6 @@ class GraphQLTypeFactory:
                 )
 
             del self.delayed_definitions[python_type.__name__]
-
-        return graphql_type
 
     def model_field_factory(
         self, field: ModelField, context: AdaptContext
@@ -377,7 +382,9 @@ class GraphQLFunctionFactory:
         )
 
         for param_name, definition in func_signature.parameters.items():
-            if isinstance(definition.default, GraphQLFunctionField):
+            if definition.default is inspect.Parameter.empty or isinstance(
+                definition.default, GraphQLFunctionField
+            ):
                 graphql_query.add_parameter(
                     self.parameter_factory(definition, func, param_name, defaults)
                 )
@@ -399,7 +406,11 @@ class GraphQLFunctionFactory:
         param_name: str,
         defaults: DefaultNames,
     ) -> GraphQLFunctionField:
-        func_parameter: GraphQLFunctionField = definition.default
+        func_parameter: GraphQLFunctionField = (
+            definition.default
+            if definition.default is not inspect.Parameter.empty
+            else GraphQLFunctionField()
+        )
         func_parameter.set_python_name(param_name)
         if definition.annotation == inspect.Parameter.empty:
             raise GraphQLFactoryException(

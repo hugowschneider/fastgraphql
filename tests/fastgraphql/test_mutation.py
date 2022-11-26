@@ -204,3 +204,35 @@ type Mutation {{
         assert self_graphql.as_mutation
         assert self_graphql.as_mutation.render() == expected_query_definition
         assert fast_graphql.render() == expected_graphql_definition
+
+    def test_mutation_implict_parameters(self) -> None:
+        fast_graphql = FastGraphQL()
+
+        class Model(BaseModel):
+            t_int: int
+
+        @fast_graphql.mutation()
+        def sample_mutation(
+            model1: Model,
+            string: Optional[str],
+        ) -> str:
+            return ""  # pragma: no cover
+
+        expected_mutation_definition = """
+sample_mutation(model1: Model!, string: String): String!
+        """.strip()
+
+        expected_graphql_definition = f"""
+input Model {{
+    t_int: Int!
+}}
+
+type Mutation {{
+    {expected_mutation_definition}
+}}""".strip()
+
+        self_graphql = SelfGraphQL.introspect(sample_mutation)
+        assert self_graphql
+        assert self_graphql.as_mutation
+        assert self_graphql.as_mutation.render() == expected_mutation_definition
+        assert fast_graphql.render() == expected_graphql_definition
