@@ -65,3 +65,4 @@ nav:
     - tutorial/simple-classes.md
     - tutorial/complex-classes.md
     - tutorial/query-mutation.md
+    - tutorial/parameters.md
