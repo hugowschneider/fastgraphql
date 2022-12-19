@@ -1,10 +1,11 @@
 # Type System and Python Types
 
-Before we dive deeper on how to use *FastGraphQL* to create and
-deploy your GraphQL API, lets look into the supported data types
-and how *FastGraphQL* connect python types with GraphQL Type.
+Before we dive deeper into how to use *FastGraphQL* to create and
+deploy your GraphQL API, it is important to look into the
+supported data types and how *FastGraphQL* connects python
+types with GraphQL Types.
 
-Starting from the very beginning, lets look together into
+Starting from the very beginning, let us look together into
 native python types.
 
 ## Primitive Python Types
@@ -19,10 +20,10 @@ below
 | `#!python str`           | `String!`        |
 | `#!python float`         | `Float!`         |
 
-It is very important to highlight that all types are translated to 
-**non-null** GraphQL types. If you would like to have nullable 
-types, you should add `#!python Optional[...]` in the 
-declaration
+Note that all types are translated to
+**non-null** GraphQL types. If you would like to have nullable
+types, you should add `#!python Optional[...]` in the
+declaration, as showed:
 
 | Python Type   | GraphQL Scalar |
 | --------------|----------------|
@@ -31,18 +32,18 @@ declaration
 | `#!python Optional[str]`           | `String`        |
 | `#!python Optional[float]`         | `Float`         |
 
-Extracting a more generic rule we can consider it like
+Extracting a more generic rule we can consider that:
 
 | Python Type   | GraphQL Type |
 | --------------|----------------|
 | `#!python T`           | `T!`      |
 | `#!python Optional[T]`           | `T`      |
 
-where `T` is any supported type by **FastGraqhQL**
+for any `T` being a supported type by **FastGraqhQL**
 
 ## Lists
 
-Assuming that `T` is any supported type by **FastGraqhQL**, python lists are translated as follows:
+Assuming that `T` is any supported type, python lists are translated as follows:
 
 | Python Type   | GraphQL Type |
 | --------------|----------------|
@@ -54,23 +55,23 @@ Assuming that `T` is any supported type by **FastGraqhQL**, python lists are tra
 
 ## Dates, Times and Date-Times
 
-**FastGraphQL** provides three custom GraphQL scalars with respective encoders and 
-decoders to support date, time and date-time types. 
+**FastGraphQL** provides three custom GraphQL scalars with respective encoders and
+decoders to support date, time and date-time types.
 
 | Python Type   | GraphQL Scalar | Default Format |
 | --------------|----------------|----------------|
 | `#!python datetime.time`           | `Time`      | `%H:%M:%S` |
 | `#!python datetime.date`           | `Date`      |`%Y-%m-%d`|
-| `#!python datetime.datetime`       | `Time`      |`%H:%M:%ST%Y-%m-%d%z`|
+| `#!python datetime.datetime`       | `DateTime`      |`%H:%M:%ST%Y-%m-%d%z`|
 
 !!! Note "Date and Time format string"
-    For all details about format strings please refer to 
+    For all details about format strings please refer to:
     <a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" target="_blank">strftime() and strptime() Format Codes</a>
 
 !!! Note "Date and Time format customization"
-    The default format string can be customized. The details about it you 
+    The default format string can be customized. The details about it you
     can find under [Global Customizations](license.md)
-    
+
 
 ## Enums
 

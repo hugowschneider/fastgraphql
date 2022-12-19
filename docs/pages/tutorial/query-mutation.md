@@ -1,21 +1,20 @@
 # Queries and Mutations
 
-Define queries and mutations in the context of GraphQL
-is define the way any consumer will interact with the
+Queries and mutations in GraphQL
+are the way any consumer will interact with the
 server serving the GraphQL API.
 
-Exposing them using *FastGraphQL* is very straigh forward
-as we saw in the example on the previous section.
+Exposing them using *FastGraphQL* is very straightforward
+as we saw in the example in the previous section.
 
-Lets go a little deeper on how to define them.
+Let us go a little deeper into how to define them.
 
 ## Queries and muntation in Python code
 
-**FastGraphQL** handles query and mutations as python
-functions which have type annotations for all its
-parameters and return type.
+**FastGraphQL** handles queries and mutations as python functions
+that have type annotations for all its parameters and return type.
 
-!!! note "Can Query act as mutation?"
+!!! note "Can Query act as a mutation?"
 
     "*Because there is no restriction on what can be done inside resolvers,
     technically there’s nothing stopping somebody from making Queries
@@ -32,7 +31,7 @@ parameters and return type.
 
 ### Queries
 
-As you have already noticed on the previous chapters, defining queries is as simple
+As you have already noticed in the previous chapters, defining queries is as simple
 as annotating a python function with `#!python FastGraphQL.query()`. Let's see
 again the first tutorial example:
 

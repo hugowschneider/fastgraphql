@@ -1,15 +1,15 @@
 # Classes with complex attributes
 
-**FastGraphQL** also support classes with attributes
+**FastGraphQL** also supports classes with attributes
 having as type any other supported type.
 
-Lets have a look on in the following code
+Let us have a look at the following code
 
 ```python title="main.py" linenums="1"
 --8<-- "tutorial/complex-classes/main.py"
 ```
 
-and as always run
+and, as always, run
 
 ```sh
 $ uvicorn main:app --reload
@@ -40,17 +40,17 @@ previous chapter, [Classes](simple-classes.md)
 Now we declare class attributes whose types are other **Pydantinc** models.
 Nothing else is needed.
 
-#### Forward Referece
+#### Forward References
 
-Lets take a closer look into line `24`, here we are using a
-<a href="https://peps.python.org/pep-0484/#forward-references" target="_black">*Forward Referece*</a>.
-The special thing about *Forward Refereces* is that it allows annotating something with a type
+Let us take a closer look at line `24``, here we are using a
+<a href="https://peps.python.org/pep-0484/#forward-references" target="_black">*Forward Reference*</a>.
+The special thing about _Forward References_ is that it allows annotating something
 yet not fully defined or yet not defined at all. In our case, we are referencing
-the type `Person` inside the definition scope of `Person` itself, that means in that
+the type `Person` inside the definition scope of `Person` itself, which means in that
 moment `Person` is not yet fully defined.
 
-**FastGraphQL** only supports *Forward Referece* in the form `List["Person"]` and not
-`"List[Person]"` eventhough both are correct. This holds true to all generic
+**FastGraphQL** only supports _Forward References_ in the form `List["Person"]` and not
+`"List[Person`]"` even though both are correct. This holds to all generic
 annotations, e.g. `Optional["Person"]` vs `"Optional[Person]"`.
 
 
