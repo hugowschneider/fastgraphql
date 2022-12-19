@@ -29,7 +29,7 @@ type Model {
         assert self_graphql.as_type.render() == expected_graphql_def
 
     def test_pydantic_global_default_name(self) -> None:
-        fast_graphql = FastGraphQL(default_names=DefaultToCamelCase())
+        fast_graphql = FastGraphQL(default_case=DefaultToCamelCase())
 
         @fast_graphql.type()
         class Model(BaseModel):
@@ -44,7 +44,7 @@ type Model {
     def test_pydantic_local_default_name(self) -> None:
         fast_graphql = FastGraphQL()
 
-        @fast_graphql.type(default_names=DefaultToCamelCase())
+        @fast_graphql.type(default_case=DefaultToCamelCase())
         class Model(BaseModel):
             to_camel_case_field: str
 
@@ -55,9 +55,9 @@ type Model {
         assert self_graphql.as_type.render() == EXPECTED_MODEL_CAMEL_CASE
 
     def test_pydantic_local_override_default_name(self) -> None:
-        fast_graphql = FastGraphQL(default_names=DefaultUnchanged())
+        fast_graphql = FastGraphQL(default_case=DefaultUnchanged())
 
-        @fast_graphql.type(default_names=DefaultToCamelCase())
+        @fast_graphql.type(default_case=DefaultToCamelCase())
         class Model(BaseModel):
             to_camel_case_field: str
 
@@ -67,9 +67,9 @@ type Model {
         assert self_graphql.as_type.render() == EXPECTED_MODEL_CAMEL_CASE
 
     def test_pydantic_name_override_all_default(self) -> None:
-        fast_graphql = FastGraphQL(default_names=DefaultUnchanged())
+        fast_graphql = FastGraphQL(default_case=DefaultUnchanged())
 
-        @fast_graphql.type(default_names=DefaultToCamelCase())
+        @fast_graphql.type(default_case=DefaultToCamelCase())
         class Model(BaseModel):
             to_camel_case_field: str = Field(graphql_name="customName")
 

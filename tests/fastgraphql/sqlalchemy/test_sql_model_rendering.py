@@ -316,7 +316,7 @@ type Model {
         assert self_graphql.as_type.render() == expected_graphql_def
 
     def test_type_with_default_name(self) -> None:
-        fast_graphql = FastGraphQL(default_names=DefaultToCamelCase())
+        fast_graphql = FastGraphQL(default_case=DefaultToCamelCase())
         Base = declarative_base()  # type: Any # NOSONAR
         fast_graphql.set_sqlalchemy_base(Base)
 
@@ -337,7 +337,7 @@ type Model {
         assert self_graphql.as_type.render() == expected_graphql_def
 
     def test_type_with_custom_type(self) -> None:
-        fast_graphql = FastGraphQL(default_names=DefaultToCamelCase())
+        fast_graphql = FastGraphQL(default_case=DefaultToCamelCase())
         Base = declarative_base()  # type: Any # NOSONAR
         fast_graphql.set_sqlalchemy_base(Base)
 

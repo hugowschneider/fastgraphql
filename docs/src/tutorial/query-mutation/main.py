@@ -8,7 +8,7 @@ fast_graphql = FastGraphQL()
 
 @fast_graphql.mutation()
 def dummy_mutation() -> str:
-    ... # Implement some state-changing logic
+    ...  # Implement some state-changing logic
     return "Done!"
 
 

@@ -11,7 +11,7 @@ def to_camel_case(snake_str: str) -> str:
     return components[0] + "".join(x.title() for x in components[1:])
 
 
-class DefaultNames:
+class DefaultCase:
     def __init__(self, convert_func: Callable[[str], str]) -> None:
         self.conver_func = convert_func
 
@@ -19,12 +19,12 @@ class DefaultNames:
         return self.conver_func(name)
 
 
-class DefaultUnchanged(DefaultNames):
+class DefaultUnchanged(DefaultCase):
     def __init__(self) -> None:
         super().__init__(convert_func=str)
 
 
-class DefaultToCamelCase(DefaultNames):
+class DefaultToCamelCase(DefaultCase):
     def __init__(self) -> None:
         super().__init__(convert_func=to_camel_case)
 

@@ -28,7 +28,7 @@ def sample_query() -> str:
 
 
 def request_provider(
-    info: GraphQLResolveInfo = fast_graphql.resolver_into(),
+    info: GraphQLResolveInfo = fast_graphql.depends_on_resolver_info(),
     info2: GraphQLResolveInfo = fast_graphql.depends_on_type(GraphQLResolveInfo),
 ) -> Request:
     assert info2 == info

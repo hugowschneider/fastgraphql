@@ -11,7 +11,7 @@ def type_factory() -> GraphQLTypeFactory:
     return GraphQLTypeFactory(
         schema=GraphQLSchema(),
         date_formats=_DateFormats("", "", ""),
-        default_names=None,
+        default_case=None,
     )
 
 
@@ -21,7 +21,7 @@ def function_factory(type_factory: GraphQLTypeFactory) -> GraphQLFunctionFactory
         schema=GraphQLSchema(),
         type_factory=type_factory,
         input_factory=type_factory,
-        default_names=None,
+        default_case=None,
     )
 
 

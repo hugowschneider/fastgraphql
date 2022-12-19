@@ -16,7 +16,6 @@ def main() -> None:
 
         parts = list(module_path.parts)
 
-
         if parts[-1] == "__init__":  #
             parts = parts[:-1]
             doc_path = doc_path.with_name("index.md")
@@ -34,5 +33,6 @@ def main() -> None:
 
     with mkdocs_gen_files.open("api/NAV.md", "w") as nav_file:  #
         nav_file.writelines(nav.build_literate_nav())
+
 
 main()

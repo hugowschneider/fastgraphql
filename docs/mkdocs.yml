@@ -41,7 +41,14 @@ plugins:
       scripts:
         - api-pages.py
   - mkdocstrings:
+      watch:
+        - ../fastgraphql
       default_handler: python
+      handlers:
+        python:
+          options:
+            show_root_heading: true
+            show_source: false
   - literate-nav:
       nav_file: NAV.md
   - section-index

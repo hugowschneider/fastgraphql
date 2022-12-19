@@ -25,7 +25,7 @@ def factory() -> GraphQLTypeFactory:
     return GraphQLTypeFactory(
         schema=GraphQLSchema(),
         date_formats=_DateFormats("", "", ""),
-        default_names=None,
+        default_case=None,
     )
 
 

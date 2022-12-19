@@ -44,7 +44,7 @@ from fastgraphql.types import (
     GraphQLType,
     GraphQLTypeAttribute,
 )
-from fastgraphql.utils import DefaultNames, DefaultUnchanged, MutableString
+from fastgraphql.utils import DefaultCase, DefaultUnchanged, MutableString
 
 T = TypeVar("T", bound=BaseModel)
 T_ANY = TypeVar("T_ANY")
@@ -69,11 +69,11 @@ class GraphQLTypeFactory:
         self,
         schema: GraphQLSchema,
         date_formats: _DateFormats,
-        default_names: Optional[DefaultNames],
+        default_case: Optional[DefaultCase],
         input_factory: bool = False,
     ) -> None:
         self.schema = schema
-        self.default_names = default_names
+        self.default_case = default_case
         self.input_factory = input_factory
         self.date_formats = date_formats
         self.sqlalchemy_base: Optional[Type[Any]] = None
@@ -113,7 +113,7 @@ class GraphQLTypeFactory:
         self,
         python_type: Type[Any],
         context: Optional[AdaptContext],
-        default_names: Optional[DefaultNames] = None,
+        default_case: Optional[DefaultCase] = None,
         exclude_model_attrs: Optional[List[str]] = None,
         name: Optional[str] = None,
     ) -> Tuple[GraphQLDataType, bool]:
@@ -134,7 +134,7 @@ class GraphQLTypeFactory:
                     name=name,
                     context=context,
                     exclude_model_attrs=exclude_model_attrs,
-                    default_names=default_names,
+                    default_case=default_case,
                 ),
                 False,
             )
@@ -145,10 +145,10 @@ class GraphQLTypeFactory:
                 name=name,
                 context=context,
                 exclude_model_attrs=exclude_model_attrs,
-                default_names=next(
+                default_case=next(
                     (
                         d
-                        for d in [default_names, self.default_names, DefaultUnchanged()]
+                        for d in [default_case, self.default_case, DefaultUnchanged()]
                         if d is not None
                     )
                 ),
@@ -178,7 +178,7 @@ class GraphQLTypeFactory:
         python_type: Type[T],
         name: Optional[str],
         exclude_model_attrs: Optional[List[str]],
-        default_names: DefaultNames,
+        default_case: DefaultCase,
         context: Optional[AdaptContext],
     ) -> Tuple[GraphQLDataType, bool]:
         from fastgraphql.sqlalchemy import adapt_sqlalchemy_graphql
@@ -205,7 +205,7 @@ class GraphQLTypeFactory:
                 exclude_model_attrs=exclude_model_attrs,
                 parse_type_func=parse_function,
                 as_input=self.input_factory,
-                default_names=default_names,
+                default_case=default_case,
             ),
             False,
         )
@@ -216,13 +216,13 @@ class GraphQLTypeFactory:
         context: Optional[AdaptContext],
         name: Optional[str] = None,
         exclude_model_attrs: Optional[List[str]] = None,
-        default_names: Optional[DefaultNames] = None,
+        default_case: Optional[DefaultCase] = None,
     ) -> GraphQLDataType:
 
         defaults = next(
             (
                 d
-                for d in [default_names, self.default_names, DefaultUnchanged()]
+                for d in [default_case, self.default_case, DefaultUnchanged()]
                 if d is not None
             )
         )
@@ -338,11 +338,11 @@ class GraphQLFunctionFactory:
         schema: GraphQLSchema,
         type_factory: GraphQLTypeFactory,
         input_factory: GraphQLTypeFactory,
-        default_names: Optional[DefaultNames],
+        default_case: Optional[DefaultCase],
         mutation_factory: bool = False,
     ) -> None:
         self.schema = schema
-        self.default_names = default_names
+        self.default_case = default_case
         self.mutation_factory = mutation_factory
         self.input_factory = input_factory
         self.type_factory = type_factory
@@ -351,13 +351,13 @@ class GraphQLFunctionFactory:
         self,
         func: Callable[..., T_ANY],
         name: Optional[str] = None,
-        default_names: Optional[DefaultNames] = None,
+        default_case: Optional[DefaultCase] = None,
     ) -> GraphQLFunction:
 
         defaults = next(
             (
                 d
-                for d in [default_names, self.default_names, DefaultUnchanged()]
+                for d in [default_case, self.default_case, DefaultUnchanged()]
                 if d is not None
             )
         )
@@ -404,7 +404,7 @@ class GraphQLFunctionFactory:
         definition: Parameter,
         func: Callable[..., Any],
         param_name: str,
-        defaults: DefaultNames,
+        defaults: DefaultCase,
     ) -> GraphQLFunctionField:
         func_parameter: GraphQLFunctionField = (
             definition.default
