@@ -132,3 +132,6 @@ dmypy.json
 .idea
 .vscode
 .scannerwork
+
+docs/public
+.DS_Store

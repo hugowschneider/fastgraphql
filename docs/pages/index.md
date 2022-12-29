@@ -55,22 +55,8 @@ $ pip install "uvicorn[standard]"
 
 The very first Hello Work example.
 
-```python
-from fastapi import FastAPI
-from fastgraphql import FastGraphQL
-from fastgraphql.fastapi import make_ariadne_fastapi_router
-
-app = FastAPI()
-fast_graphql = FastGraphQL()
-
-
-@fast_graphql.query()
-def hello() -> str:
-    return "Hello FastGraphQL!!!"
-
-
-app.include_router(make_ariadne_fastapi_router(fast_graphql=fast_graphql))
-
+```python title="main.py" linenums="1" hl_lines="9-10"
+--8<-- "tutorial/index/main.py"
 ```
 
 ```shell
@@ -82,9 +68,9 @@ shows how simple this can be.
 
 # Learn
 
-To start your journey into **FastGraphQL**, please refer to [Getting Started](https://hugowschneider.github.io/fastgraphql/tutorial/).
+To start your journey into **FastGraphQL**, please refer to [Getting Started](tutorial/index.md).
 
-You can find the API documentation [here](https://hugowschneider.github.io/fastgraphql/api/fastgraphql/).
+You can find the API documentation [here](api/fastgraphql/index.md).
 
 # Integration
 
@@ -94,7 +80,7 @@ generates a GraphQL schema.
 With that said, all integration will add functionalities and provide
 easy and alternative deployments of the defined API.
 
-You can find out more about the different integrations under [Integrations](https://hugowschneider.github.io//fastgraphql/under-construction/)
+You can find out more about the different integrations under [Integrations](lincense.md)
 
 # Acknowledgment
 

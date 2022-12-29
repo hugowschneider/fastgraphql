@@ -1,4 +1,4 @@
-name: Test
+name: Publish GitHUb Pages
 
 on:
   push:
@@ -8,18 +8,17 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  test:
+  deploy:
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
-      fail-fast: false
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.10"
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
@@ -36,23 +35,18 @@ jobs:
       - name: Install Dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: poetry install --with dev --with docs --all-extras
-      - name: Lint
-        run: make lint
-      - name: Check Imports
-        run: make check-imports
-      - name: Type Checking
-        run: make type-check
-      - name: General Static Analysis
-        run: make static-analysis
-      - name: Test
-        run: make test
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
+      - name: Verifing example code
+        run: make docs-src
+      - name: Building Pages
+        run: poetry run mkdocs build --site-dir "$RUNNER_TEMP/public"
+        working-directory: ./docs
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: build/coverage.xml
-      - name: SonarCloud Scan
-        uses: sonarsource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          # Upload entire repository
+          path: ${{ runner.temp }}/public
+        if: github.ref == 'refs/heads/main'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
+        if: github.ref == 'refs/heads/main'

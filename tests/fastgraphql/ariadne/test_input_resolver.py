@@ -119,7 +119,7 @@ def query_custom_param_name(t_int: int = fast_graphql.parameter(name="typeInt"))
     return t_int
 
 
-@fast_graphql.query(default_names=DefaultToCamelCase())
+@fast_graphql.query(default_case=DefaultToCamelCase())
 def query_camel_case(t_int: int = fast_graphql.parameter()) -> int:
     setattr(query_camel_case, "__called__", True)
     setattr(query_camel_case, "__parameters__", {"t_int": t_int})
