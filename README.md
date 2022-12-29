@@ -1,5 +1,5 @@
 # FastGraphQL
-![FastGraphQL](assets/logo_text.svg)
+![FastGraphQL](docs/pages/assets/logo_text.svg)
 <p style="text-align: center;">FastGraphQL is a tool for creating code-driven GraphQL APIs.</p>
 
 ----------
