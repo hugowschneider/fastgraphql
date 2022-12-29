@@ -40,17 +40,28 @@ class FastGraphQL:
             Defines the default case convention for all GraphQL
             names. Defaults to None, which means all names will
             be exactly the same as the defined python names.
+        time_format (str, optional):
+            Defines time format for the Time Scalar. Defaults to "%H:%M:%S"
+        date_format (str, optional):
+            Defines time format for the Time Scalar. Defaults to "%Y-%m-%d"
+        date_time_format (str, optional):
+            Defines time format for the Time Scalar. Defaults to "%Y-%m-%dT%H:%M:%S%z"
     """
 
-    def __init__(self, default_case: Optional[DefaultCase] = None) -> None:
+    def __init__(
+        self,
+        default_case: Optional[DefaultCase] = None,
+        time_format: str = "%H:%M:%S",
+        date_format: str = "%Y-%m-%d",
+        date_time_format: str = "%Y-%m-%dT%H:%M:%S%z",
+    ) -> None:
+
         self.logger = logging.getLogger(self.__class__.__name__)
         self.default_case = default_case
-        time_format = "%H:%M:%S"
-        date_format = "%Y-%m-%d"
         self._date_formats = _DateFormats(
             date_format=date_format,
             time_format=time_format,
-            date_time_format=f"{date_format}T{time_format}%z",
+            date_time_format=date_time_format,
         )
         self.schema = GraphQLSchema()
         self.type_factory = GraphQLTypeFactory(
@@ -106,30 +117,6 @@ class FastGraphQL:
             str: Current date time format
         """
         return self._date_formats.date_time_format.value
-
-    def set_date_format(self, date_format: str) -> None:
-        """Sets a new date format
-
-        Args:
-            date_format (str): New date format to be set
-        """
-        self._date_formats.date_format.set_value(date_format)
-
-    def set_time_format(self, time_format: str) -> None:
-        """Sets a new time format
-
-        Args:
-            time_format (str): New time format to be set
-        """
-        self._date_formats.time_format.set_value(time_format)
-
-    def set_date_time_format(self, date_time_format: str) -> None:
-        """Sets a new date time format
-
-        Args:
-            date_time_format (str): New date time format to be set
-        """
-        self._date_formats.date_time_format.set_value(date_time_format)
 
     def set_sqlalchemy_base(self, base: Any) -> None:
         """This methods enables SQLAlchemy models to be
@@ -228,8 +215,8 @@ class FastGraphQL:
                 This value overrides the value set in [fastgraphql.FastGraphQL][]
 
         Raises:
-            GraphQLFactoryException:
-                In case of unsupport data types in a class attribute
+            GraphQLFactoryException: In case of unsupport data types
+                                     in a class attribute
 
         Returns:
             (Callable[..., Type[PydanticModel]]): Python Decorator
@@ -299,8 +286,8 @@ class FastGraphQL:
                 as the defined python names. This value overrides the value set
                 in [fastgraphql.FastGraphQL][]
         Raises:
-            GraphQLFactoryException:
-                In case of unsupport data types in a class attribute
+            GraphQLFactoryException: In case of unsupport data types in a
+                                     class attribute
 
 
         Returns:
@@ -384,8 +371,8 @@ class FastGraphQL:
                 return_value = func(**{**injected_kwargs, **parameters_kwargs})
                 if isinstance(return_value, BaseModel):
                     return cast(T, graphql_type.map_to_output(return_value.dict()))
-                else:
-                    return return_value
+
+                return return_value
 
             graphql_type.resolver = _decorator
 

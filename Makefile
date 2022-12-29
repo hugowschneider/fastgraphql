@@ -22,4 +22,7 @@ type-check:
 clean-imports:
 	@poetry run autoflake --recursive --in-place --remove-all-unused-imports $(ALL_SRC) && poetry run isort $(ALL_SRC) && poetry run black $(ALL_SRC)
 
+docs-src:
+	@find ./docs/src -name "*.py"  -exec poetry run mypy '{}' \;
+
 all: lint static-analysis type-check check-imports test

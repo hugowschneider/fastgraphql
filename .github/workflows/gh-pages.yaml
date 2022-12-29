@@ -3,8 +3,9 @@ name: Publish GitHUb Pages
 on:
   push:
     branches:
-      - 'feature/documentation'
-      - 'main'
+      - '**'
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   deploy:
@@ -35,7 +36,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: poetry install --with dev --with docs --all-extras
       - name: Verifing example code
-        run: find ./docs/src -name "*.py"  -exec poetry run mypy '{}' \;
+        run: make docs-src
       - name: Building Pages
         run: poetry run mkdocs build --site-dir "$RUNNER_TEMP/public"
         working-directory: ./docs
@@ -44,6 +45,8 @@ jobs:
         with:
           # Upload entire repository
           path: ${{ runner.temp }}/public
+        if: github.ref == 'refs/heads/main'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
+        if: github.ref == 'refs/heads/main'

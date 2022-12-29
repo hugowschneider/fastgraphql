@@ -15,7 +15,7 @@ and, as always, run
 $ uvicorn main:app --reload
 ```
 
-and under <a href="http://127.0.0.1:8000" target="_blank">http://127.0.0.1:8000</a>
+and under <a href="http://127.0.0.1:8000/graphql" target="_blank">http://127.0.0.1:8000/graphql</a>
 you can see the result.
 
 ![Image](../assets/tutorial/complex-classes/get_person.png)
@@ -46,11 +46,11 @@ Let us take a closer look at line `24``, here we are using a
 <a href="https://peps.python.org/pep-0484/#forward-references" target="_black">*Forward Reference*</a>.
 The special thing about _Forward References_ is that it allows annotating something
 yet not fully defined or yet not defined at all. In our case, we are referencing
-the type `Person` inside the definition scope of `Person` itself, which means in that
-moment `Person` is not yet fully defined.
+the type `Person` inside the definition scope of `Person` itself, `which means at that moment`
+ `Person` is not yet fully defined.
 
 **FastGraphQL** only supports _Forward References_ in the form `List["Person"]` and not
-`"List[Person`]"` even though both are correct. This holds to all generic
+`"List[Person]"` even though both are correct. This holds to all generic
 annotations, e.g. `Optional["Person"]` vs `"Optional[Person]"`.
 
 

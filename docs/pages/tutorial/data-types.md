@@ -23,7 +23,7 @@ below
 Note that all types are translated to
 **non-null** GraphQL types. If you would like to have nullable
 types, you should add `#!python Optional[...]` in the
-declaration, as showed:
+declaration, as shown:
 
 | Python Type   | GraphQL Scalar |
 | --------------|----------------|
@@ -65,7 +65,7 @@ decoders to support date, time and date-time types.
 | `#!python datetime.datetime`       | `DateTime`      |`%H:%M:%ST%Y-%m-%d%z`|
 
 !!! Note "Date and Time format string"
-    For all details about format strings please refer to:
+    For all details about format strings please refer to
     <a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" target="_blank">strftime() and strptime() Format Codes</a>
 
 !!! Note "Date and Time format customization"

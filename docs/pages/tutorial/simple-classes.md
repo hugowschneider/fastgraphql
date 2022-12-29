@@ -16,7 +16,7 @@ then execute,
 $ uvicorn main:app --reload
 ```
 
-open <a href="http://127.0.0.1:8000" target="_blank">http://127.0.0.1:8000</a>
+open <a href="http://127.0.0.1:8000/graphql" target="_blank">http://127.0.0.1:8000/graphql</a>
 
 and Vuolà :partying_face:!
 

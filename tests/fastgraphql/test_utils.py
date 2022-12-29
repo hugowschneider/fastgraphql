@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from fastgraphql.utils import get_env_bool
+from fastgraphql.utils import MutableString, get_env_bool
 
 
 class TestUtils:
@@ -50,3 +50,12 @@ class TestUtils:
         os.environ[key] = "x"
         value = get_env_bool(key, default_value=False)
         assert not value
+
+    def test_mutable_string(self) -> None:
+        m_str = MutableString(value="test")
+        m_str2 = m_str
+
+        assert m_str.get_value() == m_str2.get_value()
+
+        m_str.set_value(value="test2")
+        assert m_str.get_value() == m_str2.get_value()

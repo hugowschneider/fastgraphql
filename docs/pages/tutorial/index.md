@@ -1,6 +1,5 @@
 # Getting Started
-
-In this section we will get started and build our first GraphQL API using **FastGraphQL**.
+In this section, we will get started and build our first GraphQL API using **FastGraphQL**.
 
 # Running your application
 
@@ -36,7 +35,7 @@ $ uvicorn main:app --reload
 
 ## Check it
 
-Open your browser at <a href="http://127.0.0.1:8000/graphql" target="_blank">http://127.0.0.1:8000/graphql</a>.
+Open your browser at <a href="http://127.0.0.1:8000/graphql" target="_blank">http://127.0.0.1:8000/graphql/graphql</a>.
 
 Doing that you will see the <a href="https://github.com/graphql/graphql-playground" target="_blank">GraphQL Playground</a> where you can explore your GraphQL API.
 

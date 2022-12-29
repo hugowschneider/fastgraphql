@@ -9,7 +9,7 @@ as we saw in the example in the previous section.
 
 Let us go a little deeper into how to define them.
 
-## Queries and muntation in Python code
+## Queries and mutation in Python code
 
 **FastGraphQL** handles queries and mutations as python functions
 that have type annotations for all its parameters and return type.

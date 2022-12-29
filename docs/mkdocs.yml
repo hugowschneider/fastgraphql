@@ -76,7 +76,7 @@ watch:
 nav:
   - FastGraphQL: index.md
   - Tutorial:
-    - tutorial/index.md
+    - Getting Started: tutorial/index.md
     - tutorial/data-types.md
     - tutorial/simple-classes.md
     - tutorial/complex-classes.md
