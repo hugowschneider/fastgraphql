@@ -7,7 +7,7 @@ app = FastAPI()
 fast_graphql = FastGraphQL()
 
 
-# @fast_graphql.input(name="ModelInput")
+@fast_graphql.input(name="ModelInput")
 class Model(BaseModel):
     value: str
 
