@@ -90,7 +90,7 @@ same, meaning we could use the same class. This is possible with
 Looking at line 16, we have now the same python class serving as
 the input and output of this specific query. As an outcome we have:
 
-![Image](../assets/tutorial/parameters/example.png)
+![Image](../assets/tutorial/parameters/reuse.png)
 
 Note that line 10 is a key aspect of this construct. This line
 tells **FastGraphQL** that we want to use the `#!python class Model`
